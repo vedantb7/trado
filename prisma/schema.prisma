@@ -1,0 +1,121 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Hostel {
+  Aiyana
+  Beauki
+  Chimair
+  Duari
+  Ekaant
+  Falgun
+  Gagan
+  Hridaya
+  Indu
+  Jasubai
+}
+
+enum Category {
+  Electronics
+  Books
+  Cycles
+  HostelGear
+}
+
+enum ListingStatus {
+  Available
+  Reserved
+  Sold
+}
+
+enum OfferStatus {
+  Proposed
+  Countered
+  Accepted
+  Declined
+  Completed
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String?
+  avatar       String?
+  karmaScore   Float    @default(0)
+  hostel       Hostel?
+  wing         String?
+  contactPref  Json?    // e.g., { "whatsapp": true, "phone": true, "chat": true }
+  
+  listings     Listing[] @relation("SellerListings")
+  offers       Offer[]   @relation("BuyerOffers")
+  
+  sentMessages Message[] @relation("SentMessages")
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Listing {
+  id             String        @id @default(uuid())
+  sellerId       String
+  seller         User          @relation("SellerListings", fields: [sellerId], references: [id])
+  
+  title          String
+  description    String
+  category       Category
+  price          Decimal
+  images         String[]
+  tags           String[]
+  status         ListingStatus @default(Available)
+  isUrgent       Boolean       @default(false)
+  locationHostel Hostel?
+  
+  offers         Offer[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model Offer {
+  id           String      @id @default(uuid())
+  buyerId      String
+  buyer        User        @relation("BuyerOffers", fields: [buyerId], references: [id])
+  
+  listingId    String
+  listing      Listing     @relation(fields: [listingId], references: [id])
+  
+  priceOffered Decimal
+  status       OfferStatus @default(Proposed)
+  
+  room         ChatRoom?
+  
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model ChatRoom {
+  id           String    @id @default(uuid())
+  offerId      String    @unique
+  offer        Offer     @relation(fields: [offerId], references: [id])
+  
+  messages     Message[]
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  roomId     String
+  room       ChatRoom @relation(fields: [roomId], references: [id])
+  
+  senderId   String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  
+  content    String
+  timestamp  DateTime @default(now())
+}
