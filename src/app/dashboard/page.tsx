@@ -2,6 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { useSocket } from "@/hooks/useSocket";
@@ -46,7 +47,6 @@ export default function Dashboard() {
       });
 
       socket.on("offer_status_changed", (data: any) => {
-        // If I am either the buyer or seller of the affected offer
         fetchData();
       });
 
@@ -57,15 +57,20 @@ export default function Dashboard() {
     }
   }, [socket, userId, activeTab]);
 
-  if (!session) return <div>Loading session...</div>;
+  if (!session) return <div>Loading...</div>;
 
   return (
     <div className={styles.wrapper}>
       <Navbar />
       <main className={styles.main}>
         <div className={styles.header}>
-          <h1>Welcome, {session?.user?.name || "Trader"}</h1>
-          <p>Karma Score: {(session?.user as any)?.karmaScore || 0}</p>
+          <div className={styles.userSection}>
+            <h1>Control Center</h1>
+            <p className={styles.welcome}>Welcome back, {session?.user?.name || "Trader"}</p>
+          </div>
+          <div className={styles.karmaScore}>
+            💎 { (session?.user as any)?.karmaScore || 0 } Karma
+          </div>
         </div>
 
         <div className={styles.tabs}>
@@ -73,42 +78,51 @@ export default function Dashboard() {
             className={activeTab === "buying" ? styles.activeTab : ""}
             onClick={() => setActiveTab("buying")}
           >
-            Current Offers (Buying)
+            My Bids
           </button>
           <button 
             className={activeTab === "selling" ? styles.activeTab : ""}
             onClick={() => setActiveTab("selling")}
           >
-            My Items (Selling)
+            My Listings
           </button>
         </div>
 
         <div className={styles.content}>
           <div className={styles.list}>
             {loading ? (
-              <p>Loading your trades...</p>
+              <div className={styles.loader}>Synchronizing your updates...</div>
             ) : offers.length > 0 ? (
               offers.map((offer: any) => (
                 <div key={offer.id} className={styles.offerCard}>
                   <div className={styles.offerInfo}>
-                    <h3>{offer.listing.title}</h3>
-                    <p>Status: <span className={styles[offer.status.toLowerCase()]}>{offer.status}</span></p>
-                    <p>Price: ₹{offer.priceOffered}</p>
+                    <div className={styles.titleRow}>
+                      <h3>{offer.listing.title}</h3>
+                      <span className={`${styles.status} ${styles[offer.status.toLowerCase()]}`}>
+                        {offer.status}
+                      </span>
+                    </div>
+                    <div className={styles.metaRow}>
+                      <span className={styles.price}>Active Bid: ₹{offer.priceOffered}</span>
+                      <span className={styles.dot}>•</span>
+                      <span className={styles.category}>{offer.listing.category}</span>
+                    </div>
                   </div>
                   <div className={styles.offerActions}>
-                    <a href={`/offers/${offer.id}`} className={styles.viewBtn}>
-                      View Trade
-                    </a>
+                    <Link href={`/offers/${offer.id}`} className={styles.viewBtn}>
+                      Manage Trade
+                    </Link>
                     {activeTab === "selling" && (
                       <button 
                         onClick={async (e) => {
                           e.preventDefault();
-                          if (window.confirm("Delete this entire listing and all its offers?")) {
+                          if (window.confirm("Archiving this listing will cancel all active negotiations. Continue?")) {
                             const res = await fetch(`/api/listings/${offer.listingId}`, { method: "DELETE" });
                             if (res.ok) fetchData();
                           }
                         }}
                         className={styles.deleteBtnSmall}
+                        title="Delete Listing"
                       >
                         🗑️
                       </button>
@@ -118,8 +132,12 @@ export default function Dashboard() {
               ))
             ) : (
               <div className={styles.cardPlaceholder}>
-                <h3>No {activeTab} activity yet.</h3>
-                <p>Explore the marketplace to start trading.</p>
+                <div className={styles.icon}>🏙️</div>
+                <h3>Quiet Market...</h3>
+                <p>Start a new transition to see it appear here in your command center.</p>
+                <Link href="/listings" className="btn-primary" style={{ marginTop: '1.5rem' }}>
+                    Browse Marketplace
+                </Link>
               </div>
             )}
           </div>

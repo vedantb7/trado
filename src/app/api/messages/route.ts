@@ -13,8 +13,9 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const roomId = searchParams.get("roomId");
 
-  if (!roomId) {
-    return NextResponse.json({ error: "Room ID is required" }, { status: 400 });
+  // Reserved system rooms do not have chat messages
+  if (!roomId || ["listings", "dashboard", "notifications"].includes(roomId)) {
+    return NextResponse.json([]);
   }
 
   try {
@@ -25,7 +26,9 @@ export async function GET(request: Request) {
 
     return NextResponse.json(messages);
   } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch messages" }, { status: 500 });
+    // Specifically handle invalid ObjectId formats or Prisma search failures
+    console.warn(`[Messages API] Invalid Room ID or query failure: ${roomId}`);
+    return NextResponse.json([], { status: 200 }); // Return empty instead of 500 for UI stability
   }
 }
 
@@ -38,6 +41,10 @@ export async function POST(request: Request) {
 
   try {
     const { roomId, content } = await request.json();
+
+    if (["listings", "dashboard", "notifications"].includes(roomId)) {
+      return NextResponse.json({ error: "Cannot send messages to system rooms" }, { status: 400 });
+    }
 
     const message = await prisma.message.create({
       data: {

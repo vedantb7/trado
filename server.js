@@ -13,7 +13,9 @@ const { createServer } = require("http");
 const { parse } = require("url");
 const next = require("next");
 const { Server } = require("socket.io");
+const { PrismaClient } = require("@prisma/client");
 
+const prisma = new PrismaClient();
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
 const port = 3001; // Match the user's current environment
@@ -40,9 +42,23 @@ app.prepare().then(() => {
         console.log(`User ${socket.id} joined room ${roomId}`);
     });
 
-    socket.on("send_message", (data) => {
-        const { roomId } = data;
-        io.to(roomId).emit("receive_message", data);
+    socket.on("send_message", async (data) => {
+        const { roomId, senderId, content } = data;
+        try {
+            // Persist message to database
+            const savedMessage = await prisma.message.create({
+                data: {
+                    roomId,
+                    senderId,
+                    content
+                }
+            });
+            // Broadcast the saved record (includes unique ID and timestamp)
+            io.to(roomId).emit("receive_message", savedMessage);
+            console.log(`Chat: Message saved to room ${roomId}`);
+        } catch (error) {
+            console.error("Failed to save socket message:", error);
+        }
     });
 
     // Global events for dashboard updates

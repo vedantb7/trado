@@ -1,71 +1,62 @@
 .wrapper {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--background);
+  background: var(--background);
 }
 
 .main {
-  flex: 1;
-  padding: 4rem 1rem;
-}
-
-.container {
+  padding: 8rem 2rem 4rem;
   max-width: 1200px;
   margin: 0 auto;
 }
 
+.container {
+  animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .contentLayout {
   display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: 4rem;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 3rem;
   align-items: start;
 }
 
-@media (max-width: 768px) {
-  .contentLayout {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-  }
-}
-
 .mediaSection {
-  position: relative;
-  background: var(--card-bg);
-  border-radius: 1.5rem;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 8rem;
 }
 
 .mainImage {
-  aspect-ratio: 1/1;
   position: relative;
+  aspect-ratio: 4/5;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  background: var(--secondary);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--glass-border);
 }
 
 .img {
   object-fit: cover;
 }
 
-.noImage {
-  aspect-ratio: 1/1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--muted-bg);
-  color: var(--muted);
-}
-
 .urgentTag {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: var(--error);
+  top: 1.5rem;
+  left: 1.5rem;
+  background: rgba(239, 68, 68, 0.9);
+  backdrop-filter: blur(8px);
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 2rem;
   font-weight: 600;
   font-size: 0.875rem;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
 .infoSection {
@@ -76,29 +67,38 @@
 
 .header {
   border-bottom: 1px solid var(--border);
-  padding-bottom: 1.5rem;
+  padding-bottom: 2rem;
 }
 
 .category {
   display: inline-block;
-  background: var(--primary-faint);
+  background: rgba(99, 102, 241, 0.1);
   color: var(--primary);
   padding: 0.25rem 0.75rem;
   border-radius: 2rem;
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   margin-bottom: 1rem;
 }
 
 .header h1 {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin-bottom: 1rem;
+  background: linear-gradient(120deg, var(--primary), var(--accent));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .price {
   font-size: 2rem;
-  color: var(--primary);
   font-weight: 700;
+  color: var(--accent);
 }
 
 .details {
@@ -115,22 +115,30 @@
 
 .label {
   font-size: 0.875rem;
-  color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.value {
+  font-size: 1.125rem;
+  font-weight: 500;
 }
 
 .description {
+  font-size: 1.125rem;
   line-height: 1.6;
-  color: var(--foreground);
+  color: var(--muted);
 }
 
-.sellerCard, .actionCard {
-  background: var(--card-bg);
-  border-radius: 1rem;
+.sellerCard {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
   padding: 1.5rem;
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
+  border-radius: 1.25rem;
+  box-shadow: var(--shadow);
 }
 
 .sellerHeader {
@@ -141,36 +149,145 @@
 }
 
 .karma {
-  color: var(--warning);
-  font-size: 0.875rem;
+  background: var(--accent);
+  color: white;
+  padding: 0.2rem 0.6rem;
+  border-radius: 2rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.actionCard {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  padding: 2rem;
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow-lg);
 }
 
 .offerForm h3 {
+  font-size: 1.5rem;
   margin-bottom: 0.5rem;
-}
-
-.offerForm p {
-  color: var(--muted);
-  font-size: 0.875rem;
-  margin-bottom: 1.5rem;
 }
 
 .inputGroup {
   display: flex;
+  flex-direction: column;
   gap: 1rem;
+  margin-top: 1.5rem;
 }
 
 .inputGroup input {
-  flex: 1;
-  padding: 0.75rem 1rem;
+  background: var(--background);
   border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  font-size: 1rem;
+  padding: 1rem;
+  border-radius: var(--radius);
+  color: var(--foreground);
+  font-size: 1.125rem;
 }
 
-.loader, .error {
-  min-height: 50vh;
+.ownerNotice {
+  text-align: center;
+}
+
+.ownerActions {
   display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.deleteBtn {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.deleteBtn:hover {
+  background: #ef4444;
+  color: white;
+}
+
+/* Seller Hub / Negotiations Tabs */
+.hubTabs {
+  display: flex;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2rem;
+}
+
+.tabBtn {
+  padding: 1rem 0;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-weight: 600;
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.tabBtn.active {
+  color: var(--primary);
+}
+
+.tabBtn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--primary);
+}
+
+.negotiationsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.negotiationCard {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+.negotiationCard:hover {
+  border-color: var(--primary);
+}
+
+.buyerMeta {
+  display: flex;
+  flex-direction: column;
+}
+
+.buyerName {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.offerPrice {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.offerStatus {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+@media (max-width: 768px) {
+  .contentLayout {
+    grid-template-columns: 1fr;
+  }
 }

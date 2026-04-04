@@ -13,26 +13,9 @@ export function useSocket(userId: string | undefined, roomId: string | undefined
   useEffect(() => {
     if (!userId || !roomId) return;
 
-    // Fetch initial messages from the room API
-    const fetchMessages = async () => {
-      try {
-        // We'll use the offer API that now returns messages
-        // Since we only have roomId, we need to ensure the backend can resolve this
-        // Or we pass offerId to useSocket. Fix: Assuming roomId is the offerId for now or 
-        // using a separate messages endpoint.
-        const response = await fetch(`/api/messages?roomId=${roomId}`);
-        if (response.ok) {
-          const data = await response.json();
-          setMessages(data);
-        }
-      } catch (error) {
-        console.error("[Socket Hook] Failed to fetch initial messages:", error);
-      }
-    };
+    const isSystemRoom = ["listings", "dashboard", "notifications"].includes(roomId);
 
-    fetchMessages();
-
-    // Connect to socket server
+    // Connect to socket server once if not already initialized
     if (!socket) {
       socket = io(undefined as any, {
         path: "/api/socket",
@@ -46,25 +29,6 @@ export function useSocket(userId: string | undefined, roomId: string | undefined
       socket.on("connect", () => {
         console.log("[Socket Hook] Connected");
         setIsConnected(true);
-        socket!.emit("join_room", roomId, userId);
-      });
-
-      socket.on("receive_message", (data: any) => {
-        setMessages((prev) => [...prev, data]);
-      });
-
-      socket.on("user_typing", (data: any) => {
-        const { userId: typingUserId, isTyping } = data;
-        if (typingUserId === userId) return; // Ignore own typing messages
-        setUsersTyping((prev) => {
-          const newSet = new Set(prev);
-          if (isTyping) {
-            newSet.add(typingUserId);
-          } else {
-            newSet.delete(typingUserId);
-          }
-          return newSet;
-        });
       });
 
       socket.on("disconnect", () => {
@@ -75,41 +39,92 @@ export function useSocket(userId: string | undefined, roomId: string | undefined
       socket.on("error", (error: any) => {
         console.error("[Socket Hook] Socket error:", error);
       });
+    } else {
+      // Synchronize connection state if socket already exists
+      setIsConnected(socket.connected);
+    }
+
+    // Always join the room whenever roomId or userId changes
+    if (socket.connected) {
+      socket.emit("join_room", roomId, userId);
+    } else {
+      socket.once("connect", () => {
+        socket!.emit("join_room", roomId, userId);
+      });
+    }
+
+    // Listener for new messages (ONLY for private rooms)
+    const handleReceiveMessage = (data: any) => {
+      setMessages((prev) => {
+          if (prev.some(m => m.id === data.id)) return prev;
+          return [...prev, data];
+      });
+    };
+
+    // Listener for typing status (ONLY for private rooms)
+    const handleUserTyping = (data: any) => {
+      const { userId: typingUserId, isTyping } = data;
+      if (typingUserId === userId) return;
+      setUsersTyping((prev) => {
+        const newSet = new Set(prev);
+        if (isTyping) newSet.add(typingUserId);
+        else newSet.delete(typingUserId);
+        return newSet;
+      });
+    };
+
+    if (!isSystemRoom) {
+      socket.on("receive_message", handleReceiveMessage);
+      socket.on("user_typing", handleUserTyping);
+
+      // Fetch initial messages
+      const fetchMessages = async () => {
+        try {
+          const response = await fetch(`/api/messages?roomId=${roomId}`);
+          if (response.ok) {
+            const data = await response.json();
+            setMessages(data);
+          }
+        } catch (error) {
+          console.error("[Socket Hook] Failed to fetch initial messages:", error);
+        }
+      };
+      fetchMessages();
     }
 
     return () => {
       if (socket) {
-        socket.off("receive_message");
-        socket.off("user_typing");
+        socket.off("receive_message", handleReceiveMessage);
+        socket.off("user_typing", handleUserTyping);
       }
     };
   }, [userId, roomId]);
 
   const sendMessage = useCallback(
     (content: string) => {
-      if (socket && isConnected) {
+      if (socket && socket.connected) {
         socket.emit("send_message", { roomId, senderId: userId, content });
       }
     },
-    [roomId, userId, isConnected]
+    [roomId, userId]
   );
 
   const sendTyping = useCallback(
     (isTyping: boolean) => {
-      if (socket && isConnected) {
+      if (socket && socket.connected) {
         socket.emit("typing", { roomId, userId, isTyping });
       }
     },
-    [roomId, userId, isConnected]
+    [roomId, userId]
   );
 
   const emitOfferUpdate = useCallback(
     (offerId: string, status: string) => {
-      if (socket && isConnected) {
+      if (socket && socket.connected) {
         socket.emit("offer_updated", { offerId, status, roomId });
       }
     },
-    [roomId, isConnected]
+    [roomId]
   );
 
   return {
