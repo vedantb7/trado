@@ -18,14 +18,30 @@ export default function ChatRoom({ roomId, buyerName, sellerName }: { roomId: st
   const [isTyping, setIsTyping] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isInitialMount = useRef(true);
   
   const userId = (session?.user as any)?.id;
   const { isConnected, sendMessage, messages, usersTyping, sendTyping } = useSocket(userId, roomId);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom only when new messages arrive *and* user is already near bottom
+  // or if it's the current user sending a message.
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    
+    const chatContainer = messagesEndRef.current?.parentElement;
+    if (chatContainer) {
+      const isNearBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight < 150;
+      const lastMessage = messages[messages.length - 1];
+      const isOwnMessage = lastMessage?.senderId === userId;
+
+      if (isNearBottom || isOwnMessage) {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  }, [messages, userId]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import Image from "next/image";
@@ -37,17 +38,23 @@ export default function ListingDetail() {
     "listings"
   ) as any;
 
-  // Real-time listener for new offers on this listing
+  // Real-time listener for offers and status updates on this listing
   useEffect(() => {
     if (socket && listing) {
-      const handleNewOffer = (data: any) => {
-        if (data.listingId === id) {
-          // Re-fetch listing to get the new offer in the list
+      const refreshListing = (data: any) => {
+        // Only refresh if the event is relevant to this listing
+        if (data.listingId === id || data.roomId) {
           fetch(`/api/listings/${id}`).then(res => res.json()).then(setListing);
         }
       };
-      socket.on("offer_received", handleNewOffer);
-      return () => socket.off("offer_received", handleNewOffer);
+
+      socket.on("offer_received", refreshListing);
+      socket.on("offer_status_changed", refreshListing);
+
+      return () => {
+        socket.off("offer_received", refreshListing);
+        socket.off("offer_status_changed", refreshListing);
+      };
     }
   }, [socket, listing, id]);
 
@@ -98,16 +105,45 @@ export default function ListingDetail() {
     if (res.ok) router.push("/dashboard");
   };
 
+  const handleUpdateStatus = async (offerId: string, status: string) => {
+    if (!window.confirm(`Are you sure you want to mark this offer as ${status}?`)) return;
+
+    try {
+      const res = await fetch(`/api/offers/${offerId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+
+      if (res.ok) {
+        const updatedOffer = await res.json();
+        // Update local listing state to reflect the status change
+        setListing((prev: any) => ({
+          ...prev,
+          offers: prev.offers.map((o: any) => o.id === offerId ? updatedOffer : o),
+          status: status === "Accepted" ? "Reserved" : prev.status
+        }));
+        
+        // Notify socket
+        if (socket && isConnected) {
+          socket.emit("offer_updated", { offerId, status, roomId: updatedOffer.room?.id });
+        }
+      }
+    } catch (err) {
+      console.error("Failed to update status:", err);
+    }
+  };
+
   const renderNegotiationHub = () => (
     <div className={styles.negotiationHub}>
-      <h3 className={styles.hubTitle}>Active Negotiations ({listing.offers?.length || 0})</h3>
+      <h3 className={styles.hubTitle}>Active Negotiations ({listing.offers?.filter((o: any) => o.status !== 'Declined').length || 0})</h3>
       <div className={styles.hubLayout}>
         <div className={styles.offersSidebar}>
           {listing.offers?.map((offer: any) => (
             <button 
               key={offer.id} 
               onClick={() => setActiveOfferId(offer.id)}
-              className={`${styles.offerCard} ${activeOfferId === offer.id ? styles.active : ""}`}
+              className={`${styles.offerCard} ${activeOfferId === offer.id ? styles.active : ""} ${offer.status === 'Declined' ? styles.declinedCard : ""}`}
             >
               <div className={styles.offerHead}>
                 <span className={styles.buyerName}>{offer.buyer.name}</span>
@@ -125,10 +161,33 @@ export default function ListingDetail() {
           {activeOffer ? (
             <div className={styles.activeChat}>
               <div className={styles.chatHeader}>
-                Negotiating with {activeOffer.buyer.name}
-                <a href={`/offers/${activeOffer.id}`} className={styles.fullViewLink}>
+                <div className={styles.chatTitle}>
+                  Negotiating with {activeOffer.buyer.name}
+                  <span className={`${styles.statusBadge} ${styles[activeOffer.status.toLowerCase()]}`}>
+                    {activeOffer.status}
+                  </span>
+                </div>
+                
+                {activeOffer.status === "Proposed" && (
+                  <div className={styles.sellerActions}>
+                    <button 
+                      onClick={() => handleUpdateStatus(activeOffer.id, "Accepted")}
+                      className={styles.acceptBtn}
+                    >
+                      Accept offer
+                    </button>
+                    <button 
+                      onClick={() => handleUpdateStatus(activeOffer.id, "Declined")}
+                      className={styles.declineBtn}
+                    >
+                      Decline
+                    </button>
+                  </div>
+                )}
+                
+                <Link href={`/offers/${activeOffer.id}`} className={styles.fullViewLink}>
                   Full View ↗
-                </a>
+                </Link>
               </div>
               <ChatRoom 
                 roomId={activeOffer.room?.id} 

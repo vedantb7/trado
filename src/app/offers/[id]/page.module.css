@@ -130,12 +130,47 @@
   box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
 }
 
-.counterArea {
+.negotiationPanel {
   display: flex;
   flex-direction: column;
+  gap: 1.25rem;
+}
+
+.turnIndicator {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  text-align: center;
+  padding: 0.5rem;
+  background: rgba(var(--foreground-rgb), 0.03);
+  border-radius: 0.5rem;
+}
+
+.inputWrapper {
+  position: relative;
+  flex: 1;
+}
+
+.currency {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.inputWrapper input {
+  width: 100%;
+  padding: 0.75rem 0.75rem 0.75rem 1.75rem !important;
+}
+
+.counterArea {
+  display: flex;
   gap: 0.75rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border);
 }
 
 .counterArea input {

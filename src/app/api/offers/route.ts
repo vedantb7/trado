@@ -91,6 +91,7 @@ export async function POST(request: Request) {
         listingId,
         buyerId: (session.user as any).id,
         priceOffered: Number(priceOffered),
+        lastPriceBy: (session.user as any).id,
         status: "Proposed",
         room: {
           create: {}

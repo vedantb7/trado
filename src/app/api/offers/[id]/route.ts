@@ -62,7 +62,8 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   }
 
   try {
-    const { status, priceCountered, handshakeCode } = await request.json().catch(() => ({}));
+    const body = await request.json().catch(() => ({}));
+    const { status, priceCountered, handshakeCode } = body;
     const offerId = params.id;
 
     const offer = await (prisma.offer.findUnique({
@@ -83,7 +84,14 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
     // State Machine logic
     const updateData: any = { status };
-    if (priceCountered) updateData.priceOffered = priceCountered;
+    
+    if (priceCountered !== undefined && priceCountered !== null) {
+      const p = parseFloat(priceCountered as any);
+      if (!isNaN(p)) {
+        updateData.priceOffered = p;
+        updateData.lastPriceBy = (session.user as any).id;
+      }
+    }
 
     // Atomic Concurrency & Logic Check
     if (status === "Accepted") {
@@ -133,8 +141,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         return NextResponse.json({ error: "Offer must be Accepted before it can be Completed" }, { status: 400 });
       }
       
-      const body = await request.json().catch(() => ({}));
-      const providedCode = body.handshakeCode;
+      const providedCode = handshakeCode;
       
       if (!offer.handshakeCode || !providedCode || !verifyHandshake(providedCode, offer.handshakeCode)) {
         return NextResponse.json({ error: "Invalid Handshake Code" }, { status: 400 });
@@ -173,6 +180,11 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const updatedOffer = await prisma.offer.update({
       where: { id: offerId },
       data: updateData,
+      include: { 
+        listing: { include: { seller: { select: { id: true, name: true, karmaScore: true } } } }, 
+        buyer: { select: { id: true, name: true, avatar: true, karmaScore: true } }, 
+        room: true 
+      },
     });
 
     return NextResponse.json(updatedOffer);

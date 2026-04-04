@@ -119,9 +119,9 @@ export function useSocket(userId: string | undefined, roomId: string | undefined
   );
 
   const emitOfferUpdate = useCallback(
-    (offerId: string, status: string) => {
+    (offerId: string, status: string, data?: any) => {
       if (socket && socket.connected) {
-        socket.emit("offer_updated", { offerId, status, roomId });
+        socket.emit("offer_updated", { offerId, status, roomId, ...data });
       }
     },
     [roomId]

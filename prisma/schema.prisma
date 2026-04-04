@@ -154,6 +154,7 @@ model Offer {
   listing      Listing     @relation(fields: [listingId], references: [id], onDelete: Cascade)
   
   priceOffered  Float
+  lastPriceBy   String?
   status        OfferStatus @default(Proposed)
   handshakeCode String?
   

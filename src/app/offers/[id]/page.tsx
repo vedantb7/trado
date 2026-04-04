@@ -11,11 +11,12 @@ import styles from "./page.module.css";
 
 export default function NegotiationPage() {
   const { id: offerId } = useParams() as any;
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const router = useRouter();
   
   const [offer, setOffer] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [counterPrice, setCounterPrice] = useState("");
   const [handshakeInput, setHandshakeInput] = useState("");
   const [handshakeCode, setHandshakeCode] = useState<string | null>(null);
@@ -42,9 +43,15 @@ export default function NegotiationPage() {
     if (socket) {
       const handleOfferUpdate = (data: any) => {
         if (data.offerId === offerId) {
-          // Re-fetch to get latest state including potential handshake codes
+          // If the socket message contains the full updated offer, use it directly
+          if (data.updatedOffer) {
+            setOffer(data.updatedOffer);
+            return;
+          }
+
+          // Fallback to re-fetch if object is missing (consistent with other components)
           const fetchOffer = async () => {
-            const res = await fetch(`/api/offers/${offerId}`);
+            const res = await fetch(`/api/offers/${offerId}`, { cache: 'no-store' });
             if (res.ok) {
               const data = await res.json();
               setOffer(data);
@@ -53,45 +60,77 @@ export default function NegotiationPage() {
           fetchOffer();
         }
       };
-      socket.on("offer_updated", handleOfferUpdate);
+      socket.on("offer_status_changed", handleOfferUpdate);
       return () => {
-        socket.off("offer_updated", handleOfferUpdate);
+        socket.off("offer_status_changed", handleOfferUpdate);
       };
     }
   }, [socket, offerId]);
 
   const updateStatus = async (status: string, price?: number, code?: string) => {
-    const res = await fetch(`/api/offers/${offerId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status, priceCountered: price, handshakeCode: code }),
-    });
+    if (submitting) return;
 
-    if (res.ok) {
-      const updated = await res.json();
-      setOffer(updated);
-      // Notify the other party
-      if (isConnected) {
-        emitOfferUpdate(offerId as string, status);
+    // Validate counter price if any
+    if (status === "Countered" && (!price || isNaN(price))) {
+      alert("Please enter a valid price to counter.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/offers/${offerId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status, priceCountered: price, handshakeCode: code }),
+      });
+
+      if (res.ok) {
+        const updated = await res.json();
+        setOffer(updated);
+        // Notify the other party with the full updated object
+        if (isConnected) {
+          emitOfferUpdate(offerId as string, status, { updatedOffer: updated });
+        }
+      } else {
+        const err = await res.json().catch(() => ({ error: "Update failed" }));
+        alert(err.error || "Failed to update offer");
       }
+    } catch (err) {
+      alert("Network error. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleGenerateHandshake = async () => {
-    const res = await fetch(`/api/offers/${offerId}/handshake`, {
-      method: "PATCH",
-    });
-    if (res.ok) {
-      const data = await res.json();
-      setHandshakeCode(data.handshakeCode);
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/offers/${offerId}/handshake`, {
+        method: "PATCH",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setHandshakeCode(data.handshakeCode);
+        // Re-fetch offer to sync state
+        const res2 = await fetch(`/api/offers/${offerId}`);
+        if (res2.ok) setOffer(await res2.json());
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  if (loading) return <div className={styles.loader}>Loading negotiation...</div>;
+  // Wait for BOTH offer data AND session to be ready
+  if (loading || sessionStatus === "loading") {
+    return <div className={styles.loader}>Synchronizing negotiation data...</div>;
+  }
+
   if (!offer) return <div className={styles.error}>Offer not found</div>;
 
-  const isSeller = offer.listing.sellerId === (session?.user as any).id;
-  const isBuyer = offer.buyerId === (session?.user as any).id;
+  const currentUserId = (session?.user as any)?.id;
+  const isSeller = offer.listing?.sellerId === currentUserId;
+  const isBuyer = offer.buyerId === currentUserId;
 
   return (
     <div className={styles.wrapper}>
@@ -130,40 +169,58 @@ export default function NegotiationPage() {
               <p>Execute actions to progress the deal.</p>
 
               <div className={styles.actions}>
-                {offer.status === "Proposed" && isSeller && (
-                  <div className={styles.sellerActions}>
-                    <button 
-                      onClick={() => updateStatus("Accepted")} 
-                      className={styles.acceptBtn}
-                    >
-                      Accept Proposal
-                    </button>
+                {/* Negotiation Phase: Proposed or Countered */}
+                {(offer.status === "Proposed" || offer.status === "Countered") && (
+                  <div className={styles.negotiationPanel}>
+                    {/* Show Accept button only if the other party proposed the current price */}
+                    {offer.lastPriceBy !== currentUserId && (
+                      <button 
+                        onClick={() => updateStatus("Accepted")} 
+                        disabled={submitting}
+                        className={styles.acceptBtn}
+                      >
+                        {submitting ? "Processing..." : "Accept Current Price"}
+                      </button>
+                    )}
+                    
                     <div className={styles.counterArea}>
-                      <input 
-                        type="number" 
-                        placeholder="State your counter..." 
-                        value={counterPrice}
-                        onChange={(e) => setCounterPrice(e.target.value)}
-                      />
+                      <div className={styles.inputWrapper}>
+                        <span className={styles.currency}>₹</span>
+                        <input 
+                          type="number" 
+                          placeholder="Your counter..." 
+                          value={counterPrice}
+                          onChange={(e) => setCounterPrice(e.target.value)}
+                        />
+                      </div>
                       <button 
                         onClick={() => updateStatus("Countered", parseFloat(counterPrice))}
+                        disabled={submitting}
                         className={styles.counterBtn}
                       >
-                        Counter Offer
+                        {submitting ? "..." : "Counter Offer"}
                       </button>
                     </div>
+                    
+                    <p className={styles.turnIndicator}>
+                      {offer.lastPriceBy === currentUserId 
+                        ? "Waiting for other party to respond..." 
+                        : "It's your turn to respond"}
+                    </p>
                   </div>
                 )}
 
+                {/* Handshake Phase: Accepted */}
                 {offer.status === "Accepted" && (
                   <div className={styles.handshakeBox}>
                     {isSeller ? (
                       <div className={styles.sellerHandshake}>
                         <button 
                           onClick={handleGenerateHandshake} 
+                          disabled={submitting}
                           className={styles.acceptBtn}
                         >
-                          Generate Handshake Code
+                          {submitting ? "Generating..." : "Generate Handshake Code"}
                         </button>
                         {(handshakeCode || offer.handshakeCode) && (
                           <div className={styles.codeDisplay}>
@@ -184,6 +241,7 @@ export default function NegotiationPage() {
                           />
                           <button 
                             onClick={() => updateStatus("Completed", undefined, handshakeInput)}
+                            disabled={submitting}
                             className={styles.counterBtn}
                           >
                             Verify & Close Deal
@@ -205,12 +263,13 @@ export default function NegotiationPage() {
                   </div>
                 )}
 
-                {offer.status !== "Completed" && (
+                {offer.status !== "Completed" && offer.status !== "Declined" && (
                   <button 
                     onClick={() => updateStatus("Declined")} 
+                    disabled={submitting}
                     className={styles.declineBtn}
                   >
-                    Withdraw from Trade
+                    {isBuyer ? "Withdraw" : "Decline Negotiation"}
                   </button>
                 )}
               </div>
