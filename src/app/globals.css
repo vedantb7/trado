@@ -1,12 +1,16 @@
 :root {
   --background: #ffffff;
+  --background-rgb: 255, 255, 255;
   --foreground: #171717;
+  --foreground-rgb: 23, 23, 23;
   --secondary: #f4f4f5;
+  --secondary-rgb: 244, 244, 245;
   --accent: #d97706; /* Amber-600 */
   --accent-foreground: #ffffff;
   --muted: #71717a;
   --border: #e4e4e7;
   --radius: 0.75rem;
+  --shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
 
   /* Premium Gradients */
   --grad-primary: linear-gradient(135deg, #d97706 0%, #b45309 100%);
@@ -14,12 +18,16 @@
 
 [data-theme='dark'] {
   --background: #09090b;
+  --background-rgb: 9, 9, 11;
   --foreground: #fafafa;
-  --secondary: #27272a;
+  --foreground-rgb: 250, 250, 250;
+  --secondary: #18181b;
+  --secondary-rgb: 24, 24, 27;
   --accent: #fbbf24; /* Amber-400 */
   --accent-foreground: #09090b;
   --muted: #a1a1aa;
   --border: #27272a;
+  --shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
 }
 
 * {
@@ -28,14 +36,27 @@
   margin: 0;
 }
 
-html,
+html {
+  scroll-behavior: smooth;
+}
+
 body {
+  min-height: 100vh;
   max-width: 100vw;
   overflow-x: hidden;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--background);
   color: var(--foreground);
   transition: background-color 0.3s ease, color 0.3s ease;
+  background-image: radial-gradient(circle at top left, rgba(var(--accent-foreground), 0.08), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(var(--accent-foreground), 0.06), transparent 20%);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
 
 a {
@@ -45,9 +66,6 @@ a {
 
 button {
   cursor: pointer;
-  border: none;
-  background: none;
-  font-family: inherit;
 }
 
 .premium-card {
@@ -55,13 +73,13 @@ button {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow: var(--shadow);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .premium-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
 }
 
 .btn-primary {
@@ -74,9 +92,10 @@ button {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .btn-primary:hover {
-  opacity: 0.9;
+  opacity: 0.92;
+  transform: translateY(-1px);
 }

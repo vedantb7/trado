@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { useSocket } from "@/hooks/useSocket";
 import styles from "./ChatRoom.module.css";
 
 interface Message {
@@ -13,51 +14,100 @@ interface Message {
 
 export default function ChatRoom({ roomId, buyerName, sellerName }: { roomId: string, buyerName: string, sellerName: string }) {
   const { data: session } = useSession();
-  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const userId = (session?.user as any)?.id;
+  const { isConnected, sendMessage, messages, usersTyping, sendTyping } = useSocket(userId, roomId);
 
-  const sendMessage = (e: React.FormEvent) => {
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || !isConnected) return;
 
-    // Socket.emit("send_message", { roomId, content: input });
-    const newMessage: Message = {
-      id: Math.random().toString(),
-      content: input,
-      senderId: (session?.user as any).id,
-      timestamp: new Date(),
-    };
-    setMessages([...messages, newMessage]);
+    sendMessage(input);
     setInput("");
+    setIsTyping(false);
+    sendTyping(false);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+
+    // Trigger typing indicator
+    if (!isTyping) {
+      setIsTyping(true);
+      sendTyping(true);
+    }
+
+    // Clear typing indicator after 2 seconds of inactivity
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+      sendTyping(false);
+    }, 2000);
   };
 
   return (
     <div className={styles.chat}>
       <div className={styles.header}>
         <h3>Negotiation: {buyerName} & {sellerName}</h3>
-      </div>
-      
-      <div className={styles.messages}>
-        {messages.map((m) => (
-          <div 
-            key={m.id} 
-            className={`${styles.message} ${m.senderId === (session?.user as any).id ? styles.own : ""}`}
-          >
-            <div className={styles.bubble}>{m.content}</div>
-            <span className={styles.time}>{new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-          </div>
-        ))}
+        <span className={styles.status}>
+          {isConnected ? (
+            <span className={styles.connected}>● Connected</span>
+          ) : (
+            <span className={styles.disconnected}>● Connecting...</span>
+          )}
+        </span>
       </div>
 
-      <form onSubmit={sendMessage} className={styles.inputArea}>
-        <input 
-          type="text" 
+      <div className={styles.messages}>
+        {messages.map((m) => (
+          <div
+            key={m.id}
+            className={`${styles.message} ${m.senderId === userId ? styles.own : ""}`}
+          >
+            <div className={styles.bubble}>{m.content}</div>
+            <span className={styles.time}>
+              {new Date(m.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          </div>
+        ))}
+
+        {usersTyping.size > 0 && (
+          <div className={styles.typingIndicator}>
+            <span>Someone is typing</span>
+            <div className={styles.dots}>
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        )}
+
+        <div ref={messagesEndRef} />
+      </div>
+
+      <form onSubmit={handleSendMessage} className={styles.inputArea}>
+        <input
+          type="text"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={handleInputChange}
           placeholder="Enter offer or message..."
           className={styles.input}
+          disabled={!isConnected}
         />
-        <button type="submit" className={styles.sendBtn}>Send</button>
+        <button type="submit" className={styles.sendBtn} disabled={!isConnected}>
+          Send
+        </button>
       </form>
     </div>
   );

@@ -42,6 +42,8 @@ export default function SellPage() {
       }));
     }
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 

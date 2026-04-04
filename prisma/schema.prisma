@@ -1,5 +1,5 @@
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
@@ -41,57 +41,81 @@ enum OfferStatus {
   Completed
 }
 
+enum UserRole {
+  Buyer
+  Seller
+  Admin
+}
+
+enum FlagStatus {
+  Pending
+  Reviewed
+  Resolved
+  Dismissed
+}
+
 model User {
-  id            String    @id @default(uuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  avatar        String?
-  karmaScore    Float     @default(0)
-  hostel        Hostel?
-  wing          String?
-  contactPref   Json?     // e.g., { "whatsapp": true, "phone": true, "chat": true }
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  name            String?
+  email           String    @unique
+  emailVerified   DateTime?
+  password        String?
+  avatar          String?
+  bio             String?
+  karmaScore      Float     @default(0)
+  hostel          Hostel?
+  wing            String?
+  contactPref     Json?
+  roles           UserRole[] @default([Buyer])
+  isSuspended     Boolean   @default(false)
+  suspensionReason String?
   
-  accounts      Account[]
-  sessions      Session[]
+  accounts        Account[]
+  sessions        Session[]
   
-  listings      Listing[] @relation("SellerListings")
-  offers        Offer[]   @relation("BuyerOffers")
+  listings        Listing[] @relation("SellerListings")
+  offers          Offer[]   @relation("BuyerOffers")
   
-  sentMessages  Message[] @relation("SentMessages")
+  sentMessages    Message[] @relation("SentMessages")
+  reviewsGiven    Review[]  @relation("ReviewerReviews")
+  reviewsReceived Review[]  @relation("RevieweeReviews")
   
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  bookmarks       Bookmark[]
+  flagsReported   Flag[]    @relation("FlagReporter")
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
 model Account {
-  id                String  @id @default(uuid())
-  userId            String
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
 
 model Session {
-  id           String   @id @default(uuid())
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
   sessionToken String   @unique
-  userId       String
+  userId       String   @db.ObjectId
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
   identifier String
   token      String   @unique
   expires    DateTime
@@ -100,14 +124,14 @@ model VerificationToken {
 }
 
 model Listing {
-  id             String        @id @default(uuid())
-  sellerId       String
-  seller         User          @relation("SellerListings", fields: [sellerId], references: [id])
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  sellerId       String        @db.ObjectId
+  seller         User          @relation("SellerListings", fields: [sellerId], references: [id], onDelete: Cascade)
   
   title          String
   description    String
   category       Category
-  price          Decimal
+  price          Float
   images         String[]
   tags           String[]
   status         ListingStatus @default(Available)
@@ -115,31 +139,34 @@ model Listing {
   locationHostel Hostel?
   
   offers         Offer[]
+  bookmarks      Bookmark[]
+  
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 }
 
 model Offer {
-  id           String      @id @default(uuid())
-  buyerId      String
-  buyer        User        @relation("BuyerOffers", fields: [buyerId], references: [id])
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId
+  buyerId      String      @db.ObjectId
+  buyer        User        @relation("BuyerOffers", fields: [buyerId], references: [id], onDelete: Cascade)
   
-  listingId    String
-  listing      Listing     @relation(fields: [listingId], references: [id])
+  listingId    String      @db.ObjectId
+  listing      Listing     @relation(fields: [listingId], references: [id], onDelete: Cascade)
   
-  priceOffered Decimal
-  status       OfferStatus @default(Proposed)
+  priceOffered  Float
+  status        OfferStatus @default(Proposed)
+  handshakeCode String?
   
-  room         ChatRoom?
+  room          ChatRoom?
   
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 }
 
 model ChatRoom {
-  id           String    @id @default(uuid())
-  offerId      String    @unique
-  offer        Offer     @relation(fields: [offerId], references: [id])
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  offerId      String    @unique @db.ObjectId
+  offer        Offer     @relation(fields: [offerId], references: [id], onDelete: Cascade)
   
   messages     Message[]
   
@@ -148,13 +175,59 @@ model ChatRoom {
 }
 
 model Message {
-  id         String   @id @default(uuid())
-  roomId     String
-  room       ChatRoom @relation(fields: [roomId], references: [id])
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  roomId     String   @db.ObjectId
+  room       ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
   
-  senderId   String
-  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  senderId   String   @db.ObjectId
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
   
   content    String
   timestamp  DateTime @default(now())
+}
+
+model Review {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  offerId    String   @db.ObjectId
+  reviewerId String   @db.ObjectId
+  reviewee   String   @db.ObjectId
+  
+  reviewer   User     @relation("ReviewerReviews", fields: [reviewerId], references: [id], onDelete: Cascade)
+  reviewedUser User   @relation("RevieweeReviews", fields: [reviewee], references: [id], onDelete: Cascade)
+  
+  rating     Int
+  comment    String?
+  
+  createdAt  DateTime @default(now())
+  
+  @@unique([offerId, reviewerId])
+}
+
+model Bookmark {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  listingId String   @db.ObjectId
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, listingId])
+}
+
+model Flag {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  type         String
+  targetId     String
+  reporterId   String    @db.ObjectId
+  reporter     User      @relation("FlagReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  
+  reason       String
+  description  String?
+  status       FlagStatus @default(Pending)
+  resolution   String?
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }

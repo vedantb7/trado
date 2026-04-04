@@ -48,22 +48,33 @@ export async function POST(request: Request) {
   }
 
     try {
-    const body = await request.json();
+    const body = await request.json().catch(() => null);
+    if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+
     const { title, description, category, price, images, isUrgent, locationHostel } = body;
 
+    // Validation: All fields required
+    if (!title?.trim() || !category || price === undefined) {
+      return NextResponse.json({ error: "Title, category, and price are required." }, { status: 400 });
+    }
+
+    if (isNaN(Number(price)) || Number(price) < 0) {
+      return NextResponse.json({ error: "Price must be a positive number." }, { status: 400 });
+    }
+
     // AI Brownie Point: Automatic Tagging from Title/Description
-    const keywords = [...title.toLowerCase().split(" "), ...description.toLowerCase().split(" ")];
+    const keywords = [...title.toLowerCase().split(" "), ...(description?.toLowerCase().split(" ") || [])];
     const commonTags = ["used", "mint", "hostel", "urgent", "iitgn", "campus"];
     const autoTags = keywords.filter(w => commonTags.includes(w) || w.length > 5).slice(0, 5);
 
     const listing = await prisma.listing.create({
       data: {
-        title,
-        description,
+        title: title.trim(),
+        description: description?.trim() || "",
         category,
-        price,
-        images,
-        isUrgent,
+        price: Number(price),
+        images: images || [],
+        isUrgent: !!isUrgent,
         locationHostel,
         tags: autoTags,
         sellerId: (session.user as any).id,

@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ChatRoom from "@/components/chat/ChatRoom";
-import { generateHandshakeCode, verifyHandshake } from "@/lib/handshake";
+import { useSocket } from "@/hooks/useSocket";
 import styles from "./page.module.css";
 
 export default function NegotiationPage() {
@@ -20,6 +20,11 @@ export default function NegotiationPage() {
   const [handshakeInput, setHandshakeInput] = useState("");
   const [handshakeCode, setHandshakeCode] = useState<string | null>(null);
 
+  const { isConnected, emitOfferUpdate, socket } = useSocket(
+    (session?.user as any)?.id, 
+    offer?.room?.id
+  ) as any;
+
   useEffect(() => {
     const fetchOffer = async () => {
       const res = await fetch(`/api/offers/${offerId}`);
@@ -32,16 +37,53 @@ export default function NegotiationPage() {
     fetchOffer();
   }, [offerId]);
 
-  const updateStatus = async (status: string, price?: number) => {
+  // Handle real-time offer updates from the other party
+  useEffect(() => {
+    if (socket) {
+      const handleOfferUpdate = (data: any) => {
+        if (data.offerId === offerId) {
+          // Re-fetch to get latest state including potential handshake codes
+          const fetchOffer = async () => {
+            const res = await fetch(`/api/offers/${offerId}`);
+            if (res.ok) {
+              const data = await res.json();
+              setOffer(data);
+            }
+          };
+          fetchOffer();
+        }
+      };
+      socket.on("offer_updated", handleOfferUpdate);
+      return () => {
+        socket.off("offer_updated", handleOfferUpdate);
+      };
+    }
+  }, [socket, offerId]);
+
+  const updateStatus = async (status: string, price?: number, code?: string) => {
     const res = await fetch(`/api/offers/${offerId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status, priceCountered: price }),
+      body: JSON.stringify({ status, priceCountered: price, handshakeCode: code }),
     });
 
     if (res.ok) {
       const updated = await res.json();
       setOffer(updated);
+      // Notify the other party
+      if (isConnected) {
+        emitOfferUpdate(offerId as string, status);
+      }
+    }
+  };
+
+  const handleGenerateHandshake = async () => {
+    const res = await fetch(`/api/offers/${offerId}/handshake`, {
+      method: "PATCH",
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setHandshakeCode(data.handshakeCode);
     }
   };
 
@@ -111,15 +153,15 @@ export default function NegotiationPage() {
                     {isSeller ? (
                       <>
                         <button 
-                          onClick={() => setHandshakeCode(generateHandshakeCode())} 
+                          onClick={handleGenerateHandshake} 
                           className={styles.acceptBtn}
                         >
                           Generate Handshake Code
                         </button>
-                        {handshakeCode && (
+                        {(handshakeCode || offer.handshakeCode) && (
                           <div className={styles.codeDisplay}>
                             <span>Share this with the buyer:</span>
-                            <h2>{handshakeCode}</h2>
+                            <h2>{handshakeCode || offer.handshakeCode}</h2>
                           </div>
                         )}
                       </>
@@ -132,10 +174,10 @@ export default function NegotiationPage() {
                           onChange={(e) => setHandshakeInput(e.target.value)}
                         />
                         <button 
-                          onClick={() => updateStatus("Completed")}
+                          onClick={() => updateStatus("Completed", undefined, handshakeInput)}
                           className={styles.counterBtn}
                         >
-                          Verify
+                          Verify & Complete
                         </button>
                       </div>
                     )}

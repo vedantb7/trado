@@ -1,33 +1,76 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
+/** Regex: must be a valid IITGN email, e.g. firstname.lastname@iitgn.ac.in */
+const IITGN_EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@iitgn\.ac\.in$/i;
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as any,
+  session: {
+    strategy: "jwt",
+  },
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    CredentialsProvider({
+      name: "IITGN Email",
+      credentials: {
+        email: { label: "IITGN Email", type: "email", placeholder: "you@iitgn.ac.in" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+
+        // 1. Validate email domain with regex
+        if (!IITGN_EMAIL_REGEX.test(credentials.email)) {
+          throw new Error("Only @iitgn.ac.in email addresses are allowed.");
+        }
+
+        // 2. Look up the user
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email.toLowerCase() },
+        });
+
+        if (!user || !user.password) {
+          throw new Error("No account found. Please register first.");
+        }
+
+        // 3. Compare password hash
+        const isValid = await bcrypt.compare(credentials.password, user.password);
+        if (!isValid) {
+          throw new Error("Incorrect password.");
+        }
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          image: user.avatar,
+          karmaScore: user.karmaScore,
+        };
+      },
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
-      if (account?.provider === "google") {
-        const email = user.email || profile?.email;
-        return !!email?.toLowerCase().endsWith("@iitgn.ac.in");
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.karmaScore = (user as any).karmaScore ?? 0;
       }
-      return true;
+      return token;
     },
-    async session({ session, user }) {
+    async session({ session, token }) {
       if (session.user) {
-        (session.user as any).id = user.id;
-        (session.user as any).karmaScore = (user as any).karmaScore || 0;
+        (session.user as any).id = token.id as string;
+        (session.user as any).karmaScore = token.karmaScore ?? 0;
       }
       return session;
     },
+  },
+  pages: {
+    signIn: "/login",
+    error: "/login",
   },
 };
 

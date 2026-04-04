@@ -2,10 +2,10 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(var(--background), 0.8);
-  backdrop-filter: blur(12px);
+  background: rgba(var(--background-rgb), 0.92);
+  backdrop-filter: blur(18px);
   border-bottom: 1px solid var(--border);
-  padding: 1rem 2rem;
+  padding: 1rem 1.5rem;
 }
 
 .container {
@@ -14,10 +14,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
 }
 
 .logo {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: 800;
   color: var(--accent);
   letter-spacing: -0.025em;
@@ -29,34 +30,65 @@
 
 .links {
   display: flex;
-  gap: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
   align-items: center;
+  justify-content: flex-end;
 }
 
 .userMenu {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  padding-left: 1.5rem;
+  gap: 1rem;
+  padding-left: 1rem;
   border-left: 1px solid var(--border);
 }
 
 .karma {
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--muted);
   background: var(--secondary);
-  padding: 0.25rem 0.75rem;
+  padding: 0.35rem 0.85rem;
   border-radius: 9999px;
 }
 
-.authBtn {
+.authBtn,
+.themeToggle {
   font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--muted);
-  transition: color 0.2s ease;
+  font-weight: 600;
+  color: var(--foreground);
+  background: var(--secondary);
+  border-radius: 9999px;
+  padding: 0.7rem 1rem;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
-.authBtn:hover {
-  color: var(--foreground);
+.authBtn:hover,
+.themeToggle:hover {
+  background: var(--border);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0.75rem 1rem;
+  }
+  .container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .links {
+    justify-content: space-between;
+    width: 100%;
+  }
+  .userMenu {
+    width: 100%;
+    justify-content: space-between;
+    padding-left: 0;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+  }
 }

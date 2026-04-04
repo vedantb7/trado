@@ -40,7 +40,7 @@ export default function HomeHero() {
       <section className={styles.features}>
         <div className={styles.feature}>
           <h3>Verified @iitgn</h3>
-          <p>Exclusive access for the IITGN community with Google OAuth.</p>
+          <p>Exclusive access for the IITGN community — sign in with your institute email.</p>
         </div>
         <div className={styles.feature}>
           <h3>Handshake Deals</h3>
