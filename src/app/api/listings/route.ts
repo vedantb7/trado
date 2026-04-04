@@ -3,12 +3,17 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { getIO } from "@/lib/socket";
+import { attachSellersToListings } from "@/lib/listingsWithSellers";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category");
   const hostel = searchParams.get("hostel");
   const query = searchParams.get("q");
+  const limitRaw = searchParams.get("limit");
+  const parsedLimit = limitRaw
+    ? Math.min(Math.max(parseInt(limitRaw, 10) || 0, 1), 100)
+    : null;
 
   try {
     const listings = await prisma.listing.findMany({
@@ -23,20 +28,14 @@ export async function GET(request: Request) {
           ],
         }),
       },
-      include: {
-        seller: {
-          select: {
-            name: true,
-            avatar: true,
-            karmaScore: true,
-          },
-        },
-      },
       orderBy: { createdAt: "desc" },
+      ...(parsedLimit != null ? { take: parsedLimit } : {}),
     });
 
-    return NextResponse.json(listings);
+    const withSellers = await attachSellersToListings(listings);
+    return NextResponse.json(withSellers);
   } catch (error) {
+    console.error("GET /api/listings:", error);
     return NextResponse.json({ error: "Failed to fetch listings" }, { status: 500 });
   }
 }
@@ -48,7 +47,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-    try {
+  try {
     const body = await request.json().catch(() => null);
     if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
 
@@ -68,7 +67,7 @@ export async function POST(request: Request) {
     const commonTags = ["used", "mint", "hostel", "urgent", "iitgn", "campus"];
     const autoTags = keywords.filter(w => commonTags.includes(w) || w.length > 5).slice(0, 5);
 
-    const listing = await prisma.listing.create({
+    const created = await prisma.listing.create({
       data: {
         title: title.trim(),
         description: description?.trim() || "",
@@ -80,14 +79,14 @@ export async function POST(request: Request) {
         tags: autoTags,
         sellerId: (session.user as any).id,
       },
-      include: { seller: { select: { name: true, avatar: true, karmaScore: true } } },
     });
+    const [listing] = await attachSellersToListings([created]);
 
     // Broadcast to all connected clients so home/listings pages update live
     try {
       const io = getIO();
       if (io) io.emit("listing_created", listing);
-    } catch {}
+    } catch { }
 
     return NextResponse.json(listing);
   } catch (error) {

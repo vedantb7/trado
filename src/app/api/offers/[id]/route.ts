@@ -5,6 +5,14 @@ import { authOptions } from "../../auth/[...nextauth]/route";
 import { recalculateKarma } from "@/lib/karma";
 import { verifyHandshake } from "@/lib/handshake";
 import { getIO } from "@/lib/socket";
+import { attachSellersToListings, withFallbackSeller } from "@/lib/listingsWithSellers";
+
+async function hydrateOfferListingSeller<T extends { listing: { sellerId: string } }>(
+  offer: T
+) {
+  const [l] = await attachSellersToListings([offer.listing]);
+  return { ...offer, listing: withFallbackSeller(l) };
+}
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
@@ -17,13 +25,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const offer = await prisma.offer.findUnique({
       where: { id: params.id },
       include: {
-        listing: {
-          include: {
-            seller: {
-              select: { id: true, name: true, avatar: true, karmaScore: true }
-            }
-          }
-        },
+        listing: true,
         buyer: {
           select: { id: true, name: true, avatar: true, karmaScore: true }
         },
@@ -60,8 +62,9 @@ export async function GET(request: Request, { params }: { params: { id: string }
       }
     });
 
+    const hydrated = await hydrateOfferListingSeller(offer);
     const offerData = {
-      ...offer,
+      ...hydrated,
       hasReviewed: userReviewCount > 0
     };
 
@@ -141,20 +144,23 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       const updatedFullOffer = await prisma.offer.findUnique({
         where: { id: offerId },
         include: {
-          listing: { include: { seller: { select: { id: true, name: true, avatar: true, karmaScore: true } } } },
+          listing: true,
           buyer: { select: { id: true, name: true, avatar: true, karmaScore: true } },
           room: true,
         },
       });
+      const hydratedOffer = updatedFullOffer
+        ? await hydrateOfferListingSeller(updatedFullOffer)
+        : null;
       // Server-side broadcast
       try {
         const io = getIO();
-        if (io && updatedFullOffer) {
-          io.emit("offer_status_changed", { offerId, updatedOffer: updatedFullOffer });
+        if (io && hydratedOffer) {
+          io.emit("offer_status_changed", { offerId, updatedOffer: hydratedOffer });
           io.emit("listing_updated", { id: offer.listingId, status: "Reserved" });
         }
       } catch {}
-      return NextResponse.json(updatedFullOffer);
+      return NextResponse.json(hydratedOffer);
     } else if (status === "Completed") {
       if (offer.status !== "Accepted") {
         return NextResponse.json({ error: "Offer must be Accepted before it can be Completed" }, { status: 400 });
@@ -183,40 +189,45 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       
       const completedOffer = await prisma.offer.findUnique({
         where: { id: offerId },
-        include: { 
-          listing: { include: { seller: { select: { id: true, name: true, avatar: true, karmaScore: true } } } }, 
-          buyer: { select: { id: true, name: true, avatar: true, karmaScore: true } }, 
-          room: true 
+        include: {
+          listing: true,
+          buyer: { select: { id: true, name: true, avatar: true, karmaScore: true } },
+          room: true,
         },
       });
+      const hydratedCompleted = completedOffer
+        ? await hydrateOfferListingSeller(completedOffer)
+        : null;
       // Server-side broadcast: deal closed
       try {
         const io = getIO();
-        if (io && completedOffer) {
-          io.emit("offer_status_changed", { offerId, updatedOffer: completedOffer });
+        if (io && hydratedCompleted) {
+          io.emit("offer_status_changed", { offerId, updatedOffer: hydratedCompleted });
           io.emit("listing_updated", { id: offer.listingId, status: "Sold" });
         }
       } catch {}
-      return NextResponse.json(completedOffer || { success: true, status: "Completed" });
+      return NextResponse.json(hydratedCompleted || { success: true, status: "Completed" });
     }
 
     const updatedOffer = await prisma.offer.update({
       where: { id: offerId },
       data: updateData,
-      include: { 
-        listing: { include: { seller: { select: { id: true, name: true, avatar: true, karmaScore: true } } } }, 
-        buyer: { select: { id: true, name: true, avatar: true, karmaScore: true } }, 
-        room: true 
+      include: {
+        listing: true,
+        buyer: { select: { id: true, name: true, avatar: true, karmaScore: true } },
+        room: true,
       },
     });
+
+    const hydratedUpdated = await hydrateOfferListingSeller(updatedOffer);
 
     // Server-side broadcast for counter/decline updates too
     try {
       const io = getIO();
-      if (io) io.emit("offer_status_changed", { offerId, updatedOffer: updatedOffer });
+      if (io) io.emit("offer_status_changed", { offerId, updatedOffer: hydratedUpdated });
     } catch {}
 
-    return NextResponse.json(updatedOffer);
+    return NextResponse.json(hydratedUpdated);
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Failed to update offer" }, { status: 500 });

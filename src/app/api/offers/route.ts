@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { getIO } from "@/lib/socket";
+import { attachSellersToListings } from "@/lib/listingsWithSellers";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -18,17 +19,18 @@ export async function GET(request: Request) {
   try {
     let offers: any[] = [];
     if (type === "buying") {
-      offers = await prisma.offer.findMany({
+      const rows = await prisma.offer.findMany({
         where: { buyerId: userId },
-        include: {
-          listing: {
-            include: {
-              seller: { select: { name: true, avatar: true, karmaScore: true } }
-            }
-          }
-        },
-        orderBy: { updatedAt: "desc" }
+        include: { listing: true },
+        orderBy: { updatedAt: "desc" },
       });
+      const listings = rows.map((o) => o.listing);
+      const enriched = await attachSellersToListings(listings);
+      const byListingId = new Map(enriched.map((l) => [l.id, l]));
+      offers = rows.map((o) => ({
+        ...o,
+        listing: byListingId.get(o.listingId)!,
+      }));
     } else if (type === "selling") {
       offers = await prisma.offer.findMany({
         where: {

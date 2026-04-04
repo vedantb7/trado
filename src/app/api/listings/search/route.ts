@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { attachSellersToListings } from "@/lib/listingsWithSellers";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -59,25 +60,17 @@ export async function GET(request: Request) {
       orderBy = [{ isUrgent: "desc" }, { createdAt: "desc" }];
     }
 
-    const [listings, totalCount] = await Promise.all([
+    const [rows, totalCount] = await Promise.all([
       prisma.listing.findMany({
         where: whereClause,
-        include: {
-          seller: {
-            select: {
-              id: true,
-              name: true,
-              avatar: true,
-              karmaScore: true,
-            },
-          },
-        },
         orderBy,
         skip,
         take: limit,
       }),
       prisma.listing.count({ where: whereClause }),
     ]);
+
+    const listings = await attachSellersToListings(rows);
 
     return NextResponse.json({
       listings,

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import prisma from "@/lib/prisma";
+import { attachSellersToListings, withFallbackSeller } from "@/lib/listingsWithSellers";
 
 export async function GET(
   request: Request,
@@ -11,13 +12,9 @@ export async function GET(
     const session = await getServerSession(authOptions);
     const userId = (session?.user as any)?.id;
 
-    const listing = await prisma.listing.findUnique({
+    const row = await prisma.listing.findUnique({
       where: { id: params.id },
       include: {
-        seller: {
-          select: { id: true, name: true, avatar: true, karmaScore: true },
-        },
-        // Include offers if the requester is the seller
         offers: {
           include: {
             buyer: { select: { id: true, name: true, avatar: true, karmaScore: true } },
@@ -28,13 +25,15 @@ export async function GET(
       },
     });
 
-    if (!listing) {
+    if (!row) {
       return NextResponse.json({ error: "Listing not found" }, { status: 404 });
     }
 
+    const [listing] = await attachSellersToListings([row]);
+
     // Security check: Only the seller should see the offers list
     const isOwner = userId && listing.sellerId === userId;
-    const responseData = { ...listing };
+    const responseData = withFallbackSeller(listing);
     if (!isOwner) {
       delete (responseData as any).offers;
     }

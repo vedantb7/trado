@@ -10,11 +10,11 @@ interface ListingCardProps {
     category: string;
     images: string[];
     isUrgent: boolean;
-    locationHostel: string;
+    locationHostel: string | null;
     seller: {
-      name: string;
+      name: string | null;
       karmaScore: number;
-    };
+    } | null;
   };
 }
 
@@ -49,7 +49,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
         <div className={styles.content}>
           <div className={styles.header}>
             <span className={styles.category}>{listing.category}</span>
-            <span className={styles.hostel}>{listing.locationHostel}</span>
+            <span className={styles.hostel}>{listing.locationHostel ?? "—"}</span>
           </div>
           
           <h3 className={styles.title}>{listing.title}</h3>
@@ -57,8 +57,10 @@ export default function ListingCard({ listing }: ListingCardProps) {
           
           <div className={styles.footer}>
             <div className={styles.sellerInfo}>
-              <span className={styles.sellerName}>{listing.seller.name}</span>
-              <span className={styles.karma}>⭐ {listing.seller.karmaScore}</span>
+              <span className={styles.sellerName}>
+                {listing.seller?.name ?? "Seller unavailable"}
+              </span>
+              <span className={styles.karma}>⭐ {listing.seller?.karmaScore ?? "—"}</span>
             </div>
             <button className={styles.viewBtn} aria-hidden="true">View Deal</button>
           </div>

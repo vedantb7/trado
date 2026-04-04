@@ -10,7 +10,18 @@ import { useSocket } from "@/hooks/useSocket";
 import styles from "./page.module.css";
 
 const CATEGORIES = ["Electronics", "Books", "Cycles", "HostelGear"];
-const HOSTELS = ["Aibaan", "Beauki", "Chimair", "Duven", "Emiet", "Firpeal", "Griwiksh", "Hiqom", "Ijokha", "Jurqia", "Kyzeel", "Lekhaag"];
+const HOSTELS = [
+  "Aiyana",
+  "Beauki",
+  "Chimair",
+  "Duari",
+  "Ekaant",
+  "Falgun",
+  "Gagan",
+  "Hridaya",
+  "Indu",
+  "Jasubai",
+];
 
 
 export default function SellPage() {
@@ -25,7 +36,7 @@ export default function SellPage() {
     description: "",
     price: "",
     category: "Electronics",
-    locationHostel: "Aibaan",
+    locationHostel: "Aiyana",
     isUrgent: false,
     images: [] as string[],
   });
