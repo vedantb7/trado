@@ -91,6 +91,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json(listing);
   } catch (error) {
+    console.error("Critical error in POST /api/listings:", error);
     return NextResponse.json({ error: "Failed to create listing" }, { status: 500 });
   }
 }
+

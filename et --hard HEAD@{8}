@@ -1,0 +1,19 @@
+[33mf6fede4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/backup[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mbackup[m[33m)[m HEAD@{0}: reset: moving to backup
+[33mf6fede4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/backup[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mbackup[m[33m)[m HEAD@{1}: checkout: moving from main to main
+[33mf6fede4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/backup[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mbackup[m[33m)[m HEAD@{2}: reset: moving to backup
+[33mbde266f[m HEAD@{3}: checkout: moving from main to main
+[33mbde266f[m HEAD@{4}: commit: chimair fixed
+[33m485a23f[m HEAD@{5}: pull -X ours origin main (finish): returning to refs/heads/main
+[33m485a23f[m HEAD@{6}: pull -X ours origin main (pick): backup before merge
+[33mad6f47a[m HEAD@{7}: pull -X ours origin main (start): checkout ad6f47a7e67029adfb74b88dfc6bda1c9d56af8a
+[33mc5c09ae[m HEAD@{8}: commit: backup before merge
+[33mf6fede4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/backup[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mbackup[m[33m)[m HEAD@{9}: checkout: moving from backup to main
+[33mf6fede4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/backup[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mbackup[m[33m)[m HEAD@{10}: checkout: moving from main to backup
+[33mf6fede4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/backup[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mbackup[m[33m)[m HEAD@{11}: commit: negotiations successfull
+[33m17b16e0[m HEAD@{12}: commit: Negotiations working
+[33m88fd3d0[m HEAD@{13}: commit: CHat working
+[33m1336c6f[m HEAD@{14}: commit: Pushhhhhhhh
+[33m11736aa[m HEAD@{15}: pull: Fast-forward
+[33m5da29b2[m HEAD@{16}: pull: Fast-forward
+[33m2e8e048[m HEAD@{17}: Branch: renamed refs/heads/master to refs/heads/main
+[33m2e8e048[m HEAD@{19}: commit (initial): first commit

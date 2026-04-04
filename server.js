@@ -50,7 +50,7 @@ app.prepare().then(() => {
         try {
             // BACKEND SECURITY: Prevent messaging if the deal is closed
             const offer = await prisma.offer.findFirst({
-                where: { roomId }
+                where: { room: { id: roomId } }
             });
             
             if (offer && (offer.status === "Completed" || offer.status === "Declined")) {
