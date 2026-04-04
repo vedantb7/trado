@@ -193,6 +193,7 @@ export default function ListingDetail() {
                 roomId={activeOffer.room?.id} 
                 buyerName={activeOffer.buyer.name} 
                 sellerName={listing.seller.name} 
+                isLocked={activeOffer.status === "Completed" || activeOffer.status === "Declined"}
               />
             </div>
           ) : (

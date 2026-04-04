@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
+import { getIO } from "@/lib/socket";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -101,6 +102,15 @@ export async function POST(request: Request) {
         room: true
       }
     });
+
+    // Emit to notify the seller in real-time
+    try {
+      const io = getIO();
+      if (io) {
+        // Fetch the listing's sellerId to target the right user
+        io.emit("new_offer", { sellerId: listing.sellerId, offerId: offer.id });
+      }
+    } catch {}
 
     return NextResponse.json(offer);
   } catch (error: any) {

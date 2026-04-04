@@ -8,11 +8,12 @@ import styles from "./ChatRoom.module.css";
 interface Message {
   id: string;
   content: string;
-  senderId: string;
+  senderId: string | null;
+  isSystem: boolean;
   timestamp: Date;
 }
 
-export default function ChatRoom({ roomId, buyerName, sellerName }: { roomId: string, buyerName: string, sellerName: string }) {
+export default function ChatRoom({ roomId, buyerName, sellerName, isLocked = false }: { roomId: string, buyerName: string, sellerName: string, isLocked?: boolean }) {
   const { data: session } = useSession();
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -45,7 +46,7 @@ export default function ChatRoom({ roomId, buyerName, sellerName }: { roomId: st
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || !isConnected) return;
+    if (!input.trim() || !isConnected || isLocked) return;
 
     sendMessage(input);
     setInput("");
@@ -86,17 +87,23 @@ export default function ChatRoom({ roomId, buyerName, sellerName }: { roomId: st
       </div>
 
       <div className={styles.messages}>
-        {messages.map((m) => (
-          <div
-            key={m.id}
-            className={`${styles.message} ${m.senderId === userId ? styles.own : ""}`}
-          >
-            <div className={styles.bubble}>{m.content}</div>
-            <span className={styles.time}>
-              {new Date(m.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-            </span>
-          </div>
-        ))}
+        {messages.map((m) =>
+          m.isSystem ? (
+            <div key={m.id} className={styles.systemMessage}>
+              <span>{m.content}</span>
+            </div>
+          ) : (
+            <div
+              key={m.id}
+              className={`${styles.message} ${m.senderId === userId ? styles.own : ""}`}
+            >
+              <div className={styles.bubble}>{m.content}</div>
+              <span className={styles.time}>
+                {new Date(m.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            </div>
+          )
+        )}
 
         {usersTyping.size > 0 && (
           <div className={styles.typingIndicator}>
@@ -117,11 +124,11 @@ export default function ChatRoom({ roomId, buyerName, sellerName }: { roomId: st
           type="text"
           value={input}
           onChange={handleInputChange}
-          placeholder="Enter offer or message..."
+          placeholder={isLocked ? "Negotiation closed... chat is locked." : "Enter offer or message..."}
           className={styles.input}
-          disabled={!isConnected}
+          disabled={!isConnected || isLocked}
         />
-        <button type="submit" className={styles.sendBtn} disabled={!isConnected}>
+        <button type="submit" className={styles.sendBtn} disabled={!isConnected || isLocked}>
           Send
         </button>
       </form>

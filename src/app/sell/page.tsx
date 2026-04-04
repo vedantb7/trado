@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { CldUploadWidget } from "next-cloudinary";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { useSocket } from "@/hooks/useSocket";
 import styles from "./page.module.css";
 
 const CATEGORIES = ["Electronics", "Books", "Cycles", "HostelGear"];
@@ -12,6 +14,10 @@ const HOSTELS = ["Aiyana", "Beauki", "Chimair", "Duari", "Ekaant", "Falgun", "Ga
 
 export default function SellPage() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const userId = (session?.user as any)?.id;
+  const { emitCreateListing } = useSocket(userId, "listings") as any;
+
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
@@ -57,6 +63,8 @@ export default function SellPage() {
     });
 
     if (res.ok) {
+      const newListing = await res.json();
+      emitCreateListing(newListing);
       router.push("/listings");
     } else {
       alert("Failed to create listing");

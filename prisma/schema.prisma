@@ -180,10 +180,11 @@ model Message {
   roomId     String   @db.ObjectId
   room       ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
   
-  senderId   String   @db.ObjectId
-  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  senderId   String?  @db.ObjectId
+  sender     User?    @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
   
   content    String
+  isSystem   Boolean  @default(false)
   timestamp  DateTime @default(now())
 }
 

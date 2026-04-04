@@ -1,37 +1,69 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ListingCard from "@/components/listings/ListingCard";
+import { useSocket } from "@/hooks/useSocket";
 import styles from "./page.module.css";
 
 const CATEGORIES = ["Electronics", "Books", "Cycles", "HostelGear"];
 const HOSTELS = ["Aiyana", "Beauki", "Chimair", "Duari", "Ekaant", "Falgun", "Gagan", "Hridaya", "Indu", "Jasubai"];
 
 export default function ListingsPage() {
-  const [listings, setListings] = useState([]);
+  const { data: session } = useSession();
+  const [listings, setListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedHostel, setSelectedHostel] = useState("");
 
-  useEffect(() => {
-    fetchListings();
-  }, [selectedCategory, selectedHostel]);
+  const userId = (session?.user as any)?.id;
+  const { socket } = useSocket(userId, "listings") as any;
 
-  const fetchListings = async (query = "") => {
+  const fetchListings = useCallback(async (query = "") => {
     setLoading(true);
     const params = new URLSearchParams();
     if (selectedCategory) params.append("category", selectedCategory);
     if (selectedHostel) params.append("hostel", selectedHostel);
     if (query) params.append("q", query);
 
-    const res = await fetch(`/api/listings?${params.toString()}`);
+    const res = await fetch(`/api/listings?${params.toString()}`, { cache: "no-store" });
     const data = await res.json();
-    setListings(data);
+    setListings(Array.isArray(data) ? data : []);
     setLoading(false);
-  };
+  }, [selectedCategory, selectedHostel]);
+
+  useEffect(() => {
+    fetchListings();
+  }, [fetchListings]);
+
+  // Live updates: new listing added
+  useEffect(() => {
+    if (!socket) return;
+    const handleNewListing = (listing: any) => {
+      // Only add if it matches current active filters
+      if (selectedCategory && listing.category !== selectedCategory) return;
+      if (selectedHostel && listing.locationHostel !== selectedHostel) return;
+      setListings((prev) => {
+        if (prev.find((l) => l.id === listing.id)) return prev;
+        return [listing, ...prev];
+      });
+    };
+    const handleListingUpdated = (data: any) => {
+      // Remove listings that are no longer Available (sold/reserved)
+      if (data.status && data.status !== "Available") {
+        setListings((prev) => prev.filter((l) => l.id !== data.id));
+      }
+    };
+    socket.on("listing_created", handleNewListing);
+    socket.on("listing_updated", handleListingUpdated);
+    return () => {
+      socket.off("listing_created", handleNewListing);
+      socket.off("listing_updated", handleListingUpdated);
+    };
+  }, [socket, selectedCategory, selectedHostel]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

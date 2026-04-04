@@ -79,5 +79,6 @@ export function initializeSocket(httpServer: HTTPServer) {
 }
 
 export function getIO() {
-  return io;
+  // Returns the io instance from the custom server (server.js stores it in global._io)
+  return (global as any)._io || io;
 }

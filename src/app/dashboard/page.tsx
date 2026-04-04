@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -17,45 +17,46 @@ export default function Dashboard() {
   const userId = (session?.user as any)?.id;
   const { socket } = useSocket(userId, "dashboard") as any;
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!session?.user) return;
     setLoading(true);
     try {
       const type = activeTab === "buying" ? "buying" : "selling";
-      const res = await fetch(`/api/offers?type=${type}`);
+      const res = await fetch(`/api/offers?type=${type}`, { cache: "no-store" });
       const data = await res.json();
-      setOffers(data);
+      setOffers(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Dashboard error:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [session, activeTab]);
 
   useEffect(() => {
     fetchData();
-  }, [session, activeTab]);
+  }, [fetchData]);
 
   // Real-time Dashboard Updates
   useEffect(() => {
-    if (socket) {
-      socket.on("offer_received", (data: any) => {
-        if (data.sellerId === userId && activeTab === "selling") {
-          console.log("New offer received! Refreshing...");
-          fetchData();
-        }
-      });
+    if (!socket) return;
 
-      socket.on("offer_status_changed", (data: any) => {
+    const handleNewOffer = (data: any) => {
+      if (data.sellerId === userId && activeTab === "selling") {
         fetchData();
-      });
+      }
+    };
+    const handleStatusChange = () => fetchData();
 
-      return () => {
-        socket.off("offer_received");
-        socket.off("offer_status_changed");
-      };
-    }
-  }, [socket, userId, activeTab]);
+    socket.on("offer_received", handleNewOffer);
+    socket.on("offer_status_changed", handleStatusChange);
+    socket.on("listing_created", handleStatusChange); // refresh selling tab when new listing is created
+
+    return () => {
+      socket.off("offer_received", handleNewOffer);
+      socket.off("offer_status_changed", handleStatusChange);
+      socket.off("listing_created", handleStatusChange);
+    };
+  }, [socket, userId, activeTab, fetchData]);
 
   if (!session) return <div>Loading...</div>;
 

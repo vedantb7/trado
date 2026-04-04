@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import ListingCard from "@/components/listings/ListingCard";
+import { useSocket } from "@/hooks/useSocket";
 import styles from "./AuthenticatedHome.module.css";
 
 interface AuthenticatedHomeProps {
@@ -10,23 +12,43 @@ interface AuthenticatedHomeProps {
 }
 
 export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
-  const [recentListings, setRecentListings] = useState([]);
+  const { data: session } = useSession();
+  const [recentListings, setRecentListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchRecent() {
-      try {
-        const res = await fetch("/api/listings?limit=5");
-        const data = await res.json();
-        setRecentListings(data);
-      } catch (err) {
-        console.error("Failed to fetch listings", err);
-      } finally {
-        setLoading(false);
-      }
+  const userId = (session?.user as any)?.id;
+  const { socket } = useSocket(userId, "listings") as any;
+
+  const fetchRecent = async () => {
+    try {
+      const res = await fetch("/api/listings?limit=5");
+      const data = await res.json();
+      setRecentListings(data);
+    } catch (err) {
+      console.error("Failed to fetch listings", err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     fetchRecent();
   }, []);
+
+  // Live update: new listing posted by anyone
+  useEffect(() => {
+    if (!socket) return;
+    const handleNewListing = (listing: any) => {
+      setRecentListings((prev: any[]) => {
+        // Prepend new listing, cap at 5
+        const updated = [listing, ...prev.filter((l: any) => l.id !== listing.id)];
+        return updated.slice(0, 5);
+      });
+    };
+    socket.on("listing_created", handleNewListing);
+    return () => socket.off("listing_created", handleNewListing);
+  }, [socket]);
+
 
   const CATEGORIES = [
     { name: "Electronics", icon: "💻" },

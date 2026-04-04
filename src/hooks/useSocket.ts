@@ -127,6 +127,24 @@ export function useSocket(userId: string | undefined, roomId: string | undefined
     [roomId]
   );
 
+  const emitCreateListing = useCallback(
+    (listingData: any) => {
+      if (socket && socket.connected) {
+        socket.emit("create_listing", listingData);
+      }
+    },
+    []
+  );
+
+  const emitCreateOffer = useCallback(
+    (sellerId: string, offerId: string) => {
+      if (socket && socket.connected) {
+        socket.emit("create_offer", { sellerId, offerId });
+      }
+    },
+    []
+  );
+
   return {
     isConnected,
     sendMessage,
@@ -134,5 +152,9 @@ export function useSocket(userId: string | undefined, roomId: string | undefined
     messages,
     usersTyping,
     emitOfferUpdate,
+    emitCreateListing,
+    emitCreateOffer,
+    socket,
   };
 }
+

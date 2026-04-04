@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { updateKarma } from "@/lib/karma";
 import { verifyHandshake } from "@/lib/handshake";
+import { getIO } from "@/lib/socket";
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
@@ -132,6 +133,14 @@ export async function PATCH(request: Request, { params }: { params: { id: string
           room: true,
         },
       });
+      // Server-side broadcast
+      try {
+        const io = getIO();
+        if (io && updatedFullOffer) {
+          io.emit("offer_status_changed", { offerId, updatedOffer: updatedFullOffer });
+          io.emit("listing_updated", { id: offer.listingId, status: "Reserved" });
+        }
+      } catch {}
       return NextResponse.json(updatedFullOffer);
     } else if (status === "Completed") {
       if (offer.status !== "Accepted") {
@@ -171,6 +180,14 @@ export async function PATCH(request: Request, { params }: { params: { id: string
           room: true 
         },
       });
+      // Server-side broadcast: deal closed
+      try {
+        const io = getIO();
+        if (io && completedOffer) {
+          io.emit("offer_status_changed", { offerId, updatedOffer: completedOffer });
+          io.emit("listing_updated", { id: offer.listingId, status: "Sold" });
+        }
+      } catch {}
       return NextResponse.json(completedOffer || { success: true, status: "Completed" });
     }
 
@@ -183,6 +200,12 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         room: true 
       },
     });
+
+    // Server-side broadcast for counter/decline updates too
+    try {
+      const io = getIO();
+      if (io) io.emit("offer_status_changed", { offerId, updatedOffer: updatedOffer });
+    } catch {}
 
     return NextResponse.json(updatedOffer);
   } catch (error) {

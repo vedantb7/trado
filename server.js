@@ -34,6 +34,9 @@ app.prepare().then(() => {
     }
   });
 
+  // Store globally so Next.js API routes can emit events
+  global._io = io;
+
   io.on("connection", (socket) => {
     console.log("Client connected:", socket.id);
 
@@ -45,7 +48,17 @@ app.prepare().then(() => {
     socket.on("send_message", async (data) => {
         const { roomId, senderId, content } = data;
         try {
-            // Persist message to database
+            // BACKEND SECURITY: Prevent messaging if the deal is closed
+            const offer = await prisma.offer.findFirst({
+                where: { roomId }
+            });
+            
+            if (offer && (offer.status === "Completed" || offer.status === "Declined")) {
+                console.log(`Blocked message: Chat for offer ${offer.id} is locked.`);
+                return; // Drop the message entirely
+            }
+
+            // Persist message to database if open
             const savedMessage = await prisma.message.create({
                 data: {
                     roomId,
@@ -62,14 +75,31 @@ app.prepare().then(() => {
     });
 
     // Global events for dashboard updates
-    socket.on("new_offer", ({ sellerId, offerId }) => {
-        io.emit("offer_received", { sellerId, offerId });
-        console.log(`Global: New offer for seller ${sellerId}`);
+    socket.on("new_offer", (data) => {
+        io.emit("offer_received", data);
+        console.log(`Global: New offer for seller ${data.sellerId}`);
     });
 
     socket.on("offer_updated", (data) => {
         io.emit("offer_status_changed", data);
         console.log(`Global: Offer updated: ${data.offerId}`);
+    });
+
+    // Relay pre-saved system messages to a specific room
+    socket.on("broadcast_message", (data) => {
+        io.to(data.roomId).emit("receive_message", data);
+    });
+
+    // Next.js App Router API mitigation: Clients emit these to trigger a global broadcast
+    socket.on("create_listing", (data) => {
+        io.emit("listing_created", data);
+        console.log(`Global: New listing broadcasted: ${data.id}`);
+    });
+
+    socket.on("create_offer", (data) => {
+        // Broadcasts to target seller's dashboard directly
+        io.emit("new_offer", data);
+        console.log(`Global: New offer for seller ${data.sellerId}`);
     });
 
     socket.on("typing", (data) => {

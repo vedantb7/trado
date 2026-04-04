@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
+import { getIO } from "@/lib/socket";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -79,7 +80,14 @@ export async function POST(request: Request) {
         tags: autoTags,
         sellerId: (session.user as any).id,
       },
+      include: { seller: { select: { name: true, avatar: true, karmaScore: true } } },
     });
+
+    // Broadcast to all connected clients so home/listings pages update live
+    try {
+      const io = getIO();
+      if (io) io.emit("listing_created", listing);
+    } catch {}
 
     return NextResponse.json(listing);
   } catch (error) {

@@ -67,6 +67,26 @@ export default function NegotiationPage() {
     }
   }, [socket, offerId]);
 
+  // Helper: post a system message in the chat for negotiation events
+  const postSystemMessage = async (content: string) => {
+    const roomId = offer?.room?.id;
+    if (!roomId) return;
+    try {
+      const res = await fetch("/api/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomId, content, isSystem: true }),
+      });
+      if (res.ok) {
+        const msg = await res.json();
+        // Relay to room via socket so both parties get it instantly
+        if (socket && socket.connected) {
+          socket.emit("broadcast_message", { ...msg, roomId: offer.room.id });
+        }
+      }
+    } catch {}
+  };
+
   const updateStatus = async (status: string, price?: number, code?: string) => {
     if (submitting) return;
 
@@ -91,6 +111,16 @@ export default function NegotiationPage() {
         if (isConnected) {
           emitOfferUpdate(offerId as string, status, { updatedOffer: updated });
         }
+        // Post system message for major events
+        if (status === "Countered" && price) {
+          await postSystemMessage(`🔄 New offer: ₹${price.toLocaleString("en-IN")}`);
+        } else if (status === "Accepted") {
+          await postSystemMessage(`✅ Price accepted at ₹${updated.priceOffered?.toLocaleString("en-IN")} — Awaiting handshake to close deal.`);
+        } else if (status === "Declined") {
+          await postSystemMessage(`❌ Negotiation ended.`);
+        } else if (status === "Completed") {
+          await postSystemMessage(`🎉 Deal completed! Transaction closed.`);
+        }
       } else {
         const err = await res.json().catch(() => ({ error: "Update failed" }));
         alert(err.error || "Failed to update offer");
@@ -112,9 +142,17 @@ export default function NegotiationPage() {
       if (res.ok) {
         const data = await res.json();
         setHandshakeCode(data.handshakeCode);
-        // Re-fetch offer to sync state
+        // Re-fetch offer to sync local state
         const res2 = await fetch(`/api/offers/${offerId}`);
-        if (res2.ok) setOffer(await res2.json());
+        if (res2.ok) {
+          const updated = await res2.json();
+          setOffer(updated);
+          // Emit so the buyer knows the code is ready
+          if (isConnected) {
+            emitOfferUpdate(offerId as string, "Accepted", { updatedOffer: updated });
+          }
+          await postSystemMessage(`🔐 Seller has generated the handshake code. Buyer: enter it to close the deal.`);
+        }
       }
     } finally {
       setSubmitting(false);
@@ -160,6 +198,7 @@ export default function NegotiationPage() {
               roomId={offer.room?.id} 
               buyerName={offer.buyer?.name} 
               sellerName={offer.listing?.seller?.name} 
+              isLocked={offer.status === "Completed" || offer.status === "Declined"}
             />
           </div>
 

@@ -40,7 +40,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { roomId, content } = await request.json();
+    const { roomId, content, isSystem } = await request.json();
 
     if (["listings", "dashboard", "notifications"].includes(roomId)) {
       return NextResponse.json({ error: "Cannot send messages to system rooms" }, { status: 400 });
@@ -50,7 +50,9 @@ export async function POST(request: Request) {
       data: {
         roomId,
         content,
-        senderId: (session.user as any).id,
+        isSystem: isSystem ?? false,
+        // System messages have no sender
+        ...(isSystem ? {} : { senderId: (session.user as any).id }),
       },
     });
 
