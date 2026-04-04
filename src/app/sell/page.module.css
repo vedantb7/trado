@@ -60,6 +60,13 @@
   font-weight: 600;
 }
 
+.insight {
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 700;
+  margin-top: 0.25rem;
+}
+
 .field input,
 .field textarea,
 .field select {
@@ -97,6 +104,42 @@
   background: rgba(var(--accent), 0.05);
   border: 1px dashed var(--accent);
   border-radius: 0.5rem;
+}
+
+.uploadArea {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.uploadBtn {
+  background: var(--background);
+  border: 2px dashed var(--border);
+  color: var(--muted);
+  padding: 2rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.uploadBtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(var(--accent), 0.05);
+}
+
+.preview {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.thumbnail {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
 }
 
 .checkboxField label {

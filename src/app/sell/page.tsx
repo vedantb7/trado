@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { CldUploadWidget } from "next-cloudinary";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import styles from "./page.module.css";
@@ -21,8 +22,26 @@ export default function SellPage() {
     isUrgent: false,
     images: [] as string[],
   });
+  const [avgPrice, setAvgPrice] = useState<number | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    // Brownie Point: Average Campus Price Logic
+    const fetchAvgPrice = async () => {
+      const res = await fetch(`/api/listings/avg?category=${formData.category}`);
+      const data = await res.json();
+      setAvgPrice(data.avg);
+    };
+    fetchAvgPrice();
+  }, [formData.category]);
+
+  const handleUpload = (result: any) => {
+    if (result.event === "success") {
+      setFormData(prev => ({
+        ...prev, 
+        images: [...prev.images, result.info.secure_url]
+      }));
+    }
+  };
     e.preventDefault();
     setLoading(true);
 
@@ -95,6 +114,32 @@ export default function SellPage() {
                   >
                     {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
+                  {avgPrice && (
+                    <span className={styles.insight}>
+                      Campus Average: ₹{avgPrice.toFixed(0)}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.section}>
+              <h3>Media Upload</h3>
+              <div className={styles.uploadArea}>
+                <CldUploadWidget 
+                  onSuccess={handleUpload}
+                  uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "bazaar_preset"}
+                >
+                  {({ open }) => (
+                    <button type="button" onClick={() => open()} className={styles.uploadBtn}>
+                      Add Photos
+                    </button>
+                  )}
+                </CldUploadWidget>
+                <div className={styles.preview}>
+                  {formData.images.map((url, i) => (
+                    <img key={url} src={url} alt={`Preview ${i}`} className={styles.thumbnail} />
+                  ))}
                 </div>
               </div>
             </div>

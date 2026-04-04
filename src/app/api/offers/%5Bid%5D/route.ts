@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
+import { updateKarma } from "@/lib/karma";
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
@@ -33,12 +34,20 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const updateData: any = { status };
     if (priceCountered) updateData.priceOffered = priceCountered;
 
-    // Concurrency Check: If accepting, mark item as Reserved
+    // Concurrency Check: If accepting, mark item as Reserved. If completing, mark as Sold.
     if (status === "Accepted") {
       await prisma.listing.update({
         where: { id: offer.listingId },
         data: { status: "Reserved" },
       });
+    } else if (status === "Completed") {
+      await prisma.listing.update({
+        where: { id: offer.listingId },
+        data: { status: "Sold" },
+      });
+      // Update Karma for both parties
+      await updateKarma(offer.buyerId, "TRADE_COMPLETED");
+      await updateKarma(offer.listing.sellerId, "TRADE_COMPLETED");
     }
 
     const updatedOffer = await prisma.offer.update({
