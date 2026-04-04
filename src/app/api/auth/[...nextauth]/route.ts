@@ -16,7 +16,8 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account, profile }) {
       if (account?.provider === "google") {
-        return !!profile?.email?.endsWith("@iitgn.ac.in");
+        const email = user.email || profile?.email;
+        return !!email?.toLowerCase().endsWith("@iitgn.ac.in");
       }
       return true;
     },
@@ -27,9 +28,6 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
-  },
-  pages: {
-    signIn: '/auth/signin',
   },
 };
 
