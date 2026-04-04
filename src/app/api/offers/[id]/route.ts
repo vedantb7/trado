@@ -19,18 +19,21 @@ export async function GET(request: Request, { params }: { params: { id: string }
         listing: {
           include: {
             seller: {
-              select: { name: true, avatar: true, karmaScore: true }
+              select: { id: true, name: true, avatar: true, karmaScore: true }
             }
           }
         },
         buyer: {
-          select: { name: true, avatar: true, karmaScore: true }
+          select: { id: true, name: true, avatar: true, karmaScore: true }
         },
         room: {
           include: {
             messages: {
               orderBy: {
                 timestamp: "asc"
+              },
+              include: {
+                sender: { select: { id: true, name: true, avatar: true } }
               }
             }
           }
@@ -93,49 +96,43 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       }
     }
 
+    // State Machine Guard: block counters if deal is already locked
+    if ((status === "Countered") && (offer.status === "Accepted" || offer.status === "Completed" || offer.status === "Declined")) {
+      return NextResponse.json({ error: "Negotiations are closed for this offer." }, { status: 400 });
+    }
+
     // Atomic Concurrency & Logic Check
     if (status === "Accepted") {
-      await prisma.$transaction(async (tx) => {
-        // [Verified Concurrency] Re-fetch listing inside transaction to ensure it's still available
-        const currentListing = await (tx.listing.findUnique({
-          where: { id: offer.listingId },
-        }) as any);
-
-        if (!currentListing || currentListing.status !== "Available") {
-          throw new Error("Item is no longer available for new deals.");
-        }
-
-        // 1. Reserve the listing
-        await tx.listing.update({
-          where: { id: offer.listingId },
-          data: { status: "Reserved" },
-        });
-
-        // 2. Accept this offer
-        await tx.offer.update({
-          where: { id: offerId },
-          data: { status: "Accepted" },
-        });
-
-        // (Optionally) decline all other pending offers for this listing
-        await tx.offer.updateMany({
-          where: {
-            listingId: offer.listingId,
-            id: { not: offerId },
-            status: "Proposed",
-          },
-          data: { status: "Declined" },
-        });
-      });
-      const updatedFullOffer = await prisma.offer.findUnique({
-        where: { id: offerId },
-        include: { 
-          listing: { include: { seller: { select: { name: true, karmaScore: true } } } }, 
-          buyer: { select: { name: true, karmaScore: true } }, 
-          room: true 
+      // Check if a DIFFERENT offer for this listing is already accepted
+      const conflictingOffer = await prisma.offer.findFirst({
+        where: {
+          listingId: offer.listingId,
+          id: { not: offerId },
+          status: "Accepted",
         },
       });
-      return NextResponse.json(updatedFullOffer || { success: true, status: "Accepted" });
+      if (conflictingOffer) {
+        return NextResponse.json({ error: "Another offer for this item has already been accepted." }, { status: 409 });
+      }
+
+      // Update offer and reserve listing atomically
+      await prisma.offer.update({ where: { id: offerId }, data: { status: "Accepted" } });
+      await prisma.listing.update({ where: { id: offer.listingId }, data: { status: "Reserved" } });
+      // Decline all other pending offers
+      await prisma.offer.updateMany({
+        where: { listingId: offer.listingId, id: { not: offerId }, status: { in: ["Proposed", "Countered"] } },
+        data: { status: "Declined" },
+      });
+
+      const updatedFullOffer = await prisma.offer.findUnique({
+        where: { id: offerId },
+        include: {
+          listing: { include: { seller: { select: { id: true, name: true, avatar: true, karmaScore: true } } } },
+          buyer: { select: { id: true, name: true, avatar: true, karmaScore: true } },
+          room: true,
+        },
+      });
+      return NextResponse.json(updatedFullOffer);
     } else if (status === "Completed") {
       if (offer.status !== "Accepted") {
         return NextResponse.json({ error: "Offer must be Accepted before it can be Completed" }, { status: 400 });
@@ -169,8 +166,8 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       const completedOffer = await prisma.offer.findUnique({
         where: { id: offerId },
         include: { 
-          listing: { include: { seller: { select: { name: true, karmaScore: true } } } }, 
-          buyer: { select: { name: true, karmaScore: true } }, 
+          listing: { include: { seller: { select: { id: true, name: true, avatar: true, karmaScore: true } } } }, 
+          buyer: { select: { id: true, name: true, avatar: true, karmaScore: true } }, 
           room: true 
         },
       });
@@ -181,7 +178,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       where: { id: offerId },
       data: updateData,
       include: { 
-        listing: { include: { seller: { select: { id: true, name: true, karmaScore: true } } } }, 
+        listing: { include: { seller: { select: { id: true, name: true, avatar: true, karmaScore: true } } } }, 
         buyer: { select: { id: true, name: true, avatar: true, karmaScore: true } }, 
         room: true 
       },
