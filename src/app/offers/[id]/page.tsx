@@ -21,6 +21,11 @@ export default function NegotiationPage() {
   const [handshakeInput, setHandshakeInput] = useState("");
   const [handshakeCode, setHandshakeCode] = useState<string | null>(null);
 
+  // Review System States
+  const [rating, setRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
+
   const { isConnected, emitOfferUpdate, socket } = useSocket(
     (session?.user as any)?.id, 
     offer?.room?.id
@@ -32,6 +37,9 @@ export default function NegotiationPage() {
       if (res.ok) {
         const data = await res.json();
         setOffer(data);
+        if (data.hasReviewed) {
+          setReviewSubmitted(true);
+        }
       }
       setLoading(false);
     };
@@ -55,6 +63,9 @@ export default function NegotiationPage() {
             if (res.ok) {
               const data = await res.json();
               setOffer(data);
+              if (data.hasReviewed) {
+                setReviewSubmitted(true);
+              }
             }
           };
           fetchOffer();
@@ -154,6 +165,41 @@ export default function NegotiationPage() {
           await postSystemMessage(`🔐 Seller has generated the handshake code. Buyer: enter it to close the deal.`);
         }
       }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (rating === 0) {
+      alert("Please select a rating.");
+      return;
+    }
+    setSubmitting(true);
+    const targetUserId = isSeller ? offer.buyerId : offer.listing?.sellerId;
+    try {
+      const res = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          offerId,
+          rating,
+          comment: reviewComment,
+          revieweeId: targetUserId
+        })
+      });
+      if (res.ok) {
+        setReviewSubmitted(true);
+      } else {
+         const err = await res.json();
+         if (err.error === "You have already reviewed this transaction.") {
+           setReviewSubmitted(true);
+         } else {
+           alert(err.error || "Failed to submit review");
+         }
+      }
+    } catch (err) {
+       alert("Error submitting review");
     } finally {
       setSubmitting(false);
     }
@@ -296,7 +342,43 @@ export default function NegotiationPage() {
                     <div className={styles.successIcon}>✨</div>
                     <h3>Transaction Complete</h3>
                     <p>Karma points have been synchronized to your profiles.</p>
-                    <button onClick={() => router.push("/dashboard")} className={styles.counterBtn}>
+                    
+                    {!reviewSubmitted ? (
+                      <div className={styles.reviewBox}>
+                        <h4>Rate your Experience with {isSeller ? "Buyer" : "Seller"}</h4>
+                        <div className={styles.stars}>
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              className={`${styles.starBtn} ${rating >= star ? styles.activeStar : ""}`}
+                              onClick={() => setRating(star)}
+                              disabled={submitting}
+                            >
+                              ★
+                            </button>
+                          ))}
+                        </div>
+                        <textarea 
+                          placeholder="Leave an optional comment..."
+                          value={reviewComment}
+                          onChange={(e) => setReviewComment(e.target.value)}
+                        />
+                        <button 
+                          onClick={handleSubmitReview}
+                          disabled={submitting || rating === 0}
+                          className={styles.counterBtn}
+                        >
+                          Submit Review
+                        </button>
+                      </div>
+                    ) : (
+                      <div className={styles.reviewBox}>
+                        <h4>✅ Review Submitted</h4>
+                        <p>Thank you for keeping Bazaar@IITGN safe.</p>
+                      </div>
+                    )}
+                    
+                    <button style={{marginTop: "2rem"}} onClick={() => router.push("/dashboard")} className={styles.counterBtn}>
                         Back to Control Center
                     </button>
                   </div>

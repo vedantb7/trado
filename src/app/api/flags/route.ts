@@ -59,6 +59,19 @@ export async function POST(request: Request) {
       );
     }
 
+    // Deduplication check
+    const existing = await prisma.flag.findFirst({
+      where: {
+        targetId,
+        reporterId,
+        status: "Pending"
+      }
+    });
+
+    if (existing) {
+      return NextResponse.json({ error: "You have already filed a report for this target which is pending review." }, { status: 429 });
+    }
+
     // Create flag
     const flag = await prisma.flag.create({
       data: {

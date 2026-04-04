@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
-import { updateKarma } from "@/lib/karma";
+import { recalculateKarma } from "@/lib/karma";
 import { verifyHandshake } from "@/lib/handshake";
 import { getIO } from "@/lib/socket";
 
@@ -52,7 +52,20 @@ export async function GET(request: Request, { params }: { params: { id: string }
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    return NextResponse.json(offer);
+    // Check if the current user has already left a review for this offer
+    const userReviewCount = await prisma.review.count({
+      where: {
+        offerId: params.id,
+        reviewerId: (session.user as any).id
+      }
+    });
+
+    const offerData = {
+      ...offer,
+      hasReviewed: userReviewCount > 0
+    };
+
+    return NextResponse.json(offerData);
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch offer" }, { status: 500 });
   }
@@ -161,16 +174,12 @@ export async function PATCH(request: Request, { params }: { params: { id: string
          prisma.offer.update({
             where: { id: offerId },
             data: { status: "Completed" },
-         }),
-         prisma.user.update({
-            where: { id: offer.buyerId },
-            data: { karmaScore: { increment: 10 } }
-         }),
-         prisma.user.update({
-            where: { id: offer.listing.sellerId },
-            data: { karmaScore: { increment: 10 } }
          })
       ]);
+      
+      // Calculate dynamic algorithm karma
+      await recalculateKarma(offer.buyerId);
+      await recalculateKarma(offer.listing.sellerId);
       
       const completedOffer = await prisma.offer.findUnique({
         where: { id: offerId },

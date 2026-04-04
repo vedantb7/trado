@@ -105,6 +105,31 @@ export default function ListingDetail() {
     if (res.ok) router.push("/dashboard");
   };
 
+  const handleFlag = async () => {
+    if (!session) {
+      alert("You must be logged in to report listings.");
+      return;
+    }
+    const reason = prompt("Why are you reporting this listing? (e.g. Spam, Counterfeit, Offensive)");
+    if (!reason) return;
+
+    try {
+      const res = await fetch("/api/flags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "listing", targetId: id, reason })
+      });
+      if (res.ok) {
+        alert("Report submitted successfully. Our moderators will review it.");
+      } else {
+        const err = await res.json();
+        alert(err.error || "Failed to submit report.");
+      }
+    } catch (e) {
+      alert("Network error.");
+    }
+  };
+
   const handleUpdateStatus = async (offerId: string, status: string) => {
     if (!window.confirm(`Are you sure you want to mark this offer as ${status}?`)) return;
 
@@ -243,6 +268,16 @@ export default function ListingDetail() {
                     <span>{listing.seller.name} (⭐ {listing.seller.karmaScore})</span>
                   </div>
                 </div>
+                
+                {!isOwner && (
+                  <button 
+                    onClick={handleFlag}
+                    title="Report Suspicious Listing"
+                    style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.85rem", marginTop: "1.5rem", display: "inline-flex", alignItems: "center", gap: "0.5rem", opacity: 0.7 }}
+                  >
+                    🚩 Report this listing
+                  </button>
+                )}
               </div>
             </div>
 
