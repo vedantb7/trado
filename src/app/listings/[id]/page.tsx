@@ -260,11 +260,11 @@ export default function ListingDetail() {
                 <p className={styles.description}>{listing.description}</p>
                 <div className={styles.metaGrid}>
                   <div className={styles.metaItem}>
-                    <label>location</label>
+                    <label>📍 Hostel Location</label>
                     <span>{listing.locationHostel} Hostel</span>
                   </div>
                   <div className={styles.metaItem}>
-                    <label>seller</label>
+                    <label>👤 Trusted Seller</label>
                     <span>{listing.seller.name} (⭐ {listing.seller.karmaScore})</span>
                   </div>
                 </div>
@@ -272,8 +272,8 @@ export default function ListingDetail() {
                 {!isOwner && (
                   <button 
                     onClick={handleFlag}
+                    className={styles.reportBtn}
                     title="Report Suspicious Listing"
-                    style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.85rem", marginTop: "1.5rem", display: "inline-flex", alignItems: "center", gap: "0.5rem", opacity: 0.7 }}
                   >
                     🚩 Report this listing
                   </button>
@@ -286,16 +286,16 @@ export default function ListingDetail() {
               {isOwner ? (
                 <div className={styles.ownerControls}>
                   <div className={styles.ownerBanner}>
-                    <p>You are the owner of this listing</p>
-                    <button onClick={handleDelete} className={styles.deleteBtn}>Delete</button>
+                    <span>🛡️ Listing Management</span>
+                    <button onClick={handleDelete} className={styles.deleteBtn}>Delete Listing</button>
                   </div>
                   {renderNegotiationHub()}
                 </div>
               ) : (
                 <div className={styles.actionCard}>
                   <div className={styles.cardHeader}>
-                    <h3>Intrigued?</h3>
-                    <p>Make a fair offer to start a conversation with the seller.</p>
+                    <h3>Interested?</h3>
+                    <p>Propose your best price to start a direct negotiation with the seller.</p>
                   </div>
                   <form onSubmit={handleMakeOffer} className={styles.offerForm}>
                     <div className={styles.inputGroup}>
@@ -303,17 +303,17 @@ export default function ListingDetail() {
                       <input 
                         type="number" 
                         required 
-                        placeholder="Your bid..."
+                        placeholder="0.00"
                         value={offerPrice}
                         onChange={(e) => setOfferPrice(e.target.value)}
                       />
                     </div>
                     <button type="submit" disabled={submitting} className={styles.submitBtn}>
-                      {submitting ? "Sending Bid..." : "Make Offer"}
+                      {submitting ? "Sending Your Bid..." : "Make An Offer"}
                     </button>
                   </form>
                   <div className={styles.trustBanner}>
-                    🛡️ Secure Handshake • ✅ Verified Campus ID
+                    🔒 Secure Handshake • ✅ Verified IITGN ID
                   </div>
                 </div>
               )}

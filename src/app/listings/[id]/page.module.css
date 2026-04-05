@@ -5,39 +5,46 @@
 
 .main {
   padding: 8rem 2rem 4rem;
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
 }
 
 .container {
-  animation: slideUp 0.6s ease-out;
+  animation: fadeIn 0.6s ease-out;
 }
 
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .contentLayout {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
-  gap: 3rem;
+  gap: 4rem;
   align-items: start;
 }
 
+/* Left Column Styling */
+.leftCol {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
 .mediaSection {
-  position: sticky;
-  top: 8rem;
+  position: relative;
 }
 
 .mainImage {
   position: relative;
-  aspect-ratio: 4/5;
+  width: 100%;
+  aspect-ratio: 16/10;
   border-radius: 1.5rem;
   overflow: hidden;
   background: var(--secondary);
   box-shadow: var(--shadow-lg);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--border);
 }
 
 .img {
@@ -47,248 +54,218 @@
 .urgentTag {
   position: absolute;
   top: 1.5rem;
-  left: 1.5rem;
-  background: rgba(239, 68, 68, 0.9);
-  backdrop-filter: blur(8px);
+  right: 1.5rem;
+  background: #dc2626;
   color: white;
   padding: 0.5rem 1rem;
-  border-radius: 2rem;
-  font-weight: 600;
-  font-size: 0.875rem;
-  z-index: 10;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-}
-
-.infoSection {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-.header {
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 2rem;
-}
-
-.category {
-  display: inline-block;
-  background: rgba(99, 102, 241, 0.1);
-  color: var(--primary);
-  padding: 0.25rem 0.75rem;
-  border-radius: 2rem;
-  font-size: 0.75rem;
+  border-radius: 0.75rem;
   font-weight: 700;
+  font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 1rem;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  z-index: 10;
 }
 
-.header h1 {
-  font-size: 3rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  margin-bottom: 1rem;
-  background: linear-gradient(120deg, var(--primary), var(--accent));
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.detailsGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.priceRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .price {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--accent);
-}
-
-.details {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.detailItem {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.label {
-  font-size: 0.875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--muted);
-  font-weight: 600;
-}
-
-.value {
-  font-size: 1.125rem;
-  font-weight: 500;
-}
-
-.description {
-  font-size: 1.125rem;
-  line-height: 1.6;
-  color: var(--muted);
-}
-
-.sellerCard {
-  background: var(--glass);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  padding: 1.5rem;
-  border-radius: 1.25rem;
-  box-shadow: var(--shadow);
-}
-
-.chatHeader {
-  padding: 1.25rem 1.5rem;
-  background: rgba(var(--foreground-rgb), 0.04);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.chatTitle {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  font-weight: 700;
+  font-size: 2.5rem;
+  font-weight: 800;
   color: var(--foreground);
 }
 
-.statusBadge {
-  font-size: 0.7rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: 2rem;
-  text-transform: uppercase;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-}
-
-.statusBadge.proposed { background: rgba(var(--accent-rgb), 0.1); color: var(--accent); }
-.statusBadge.accepted { background: rgba(52, 211, 153, 0.15); color: #10b981; }
-.statusBadge.declined { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
-
-.sellerActions {
-  display: flex;
-  gap: 0.75rem;
-  margin-left: auto;
-}
-
-.acceptBtn {
-  padding: 0.5rem 1.25rem;
-  background: var(--accent);
-  color: var(--accent-foreground);
-  border-radius: 0.75rem;
-  font-weight: 700;
-  font-size: 0.85rem;
-  transition: all 0.2s ease;
-}
-
-.acceptBtn:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-}
-
-.declineBtn {
-  padding: 0.5rem 1.25rem;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-  border-radius: 0.75rem;
-  font-weight: 700;
-  font-size: 0.85rem;
-  transition: all 0.2s ease;
-}
-
-.declineBtn:hover {
-  background: #ef4444;
-  color: white;
-}
-
-.declinedCard {
-  opacity: 0.6;
-  filter: grayscale(0.5);
-}
-
-.fullViewLink {
-  color: var(--muted);
-  font-size: 0.85rem;
-  font-weight: 600;
-  transition: color 0.2s ease;
-  white-space: nowrap;
-}
-
-.fullViewLink:hover {
-  color: var(--accent);
-}
-
-.sellerHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
-
-.karma {
-  background: var(--accent);
-  color: white;
-  padding: 0.2rem 0.6rem;
+.category {
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--primary);
+  padding: 0.4rem 1rem;
   border-radius: 2rem;
   font-size: 0.75rem;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.detailsGroup h1 {
+  font-size: 2.75rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--foreground);
+}
+
+.description {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: var(--muted);
+  white-space: pre-wrap;
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: var(--secondary);
+  border-radius: 1.25rem;
+  border: 1px solid var(--border);
+}
+
+.metaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.metaItem label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.metaItem span {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+/* Right Column Styling */
+.rightCol {
+  position: sticky;
+  top: 8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 .actionCard {
   background: var(--glass);
   backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
-  padding: 2rem;
-  border-radius: 1.5rem;
-  box-shadow: var(--shadow-lg);
+  padding: 2.5rem;
+  border-radius: 2rem;
+  box-shadow: var(--shadow-xl);
 }
 
-.offerForm h3 {
-  font-size: 1.5rem;
+.cardHeader {
+  margin-bottom: 2rem;
+}
+
+.cardHeader h3 {
+  font-size: 1.75rem;
+  font-weight: 700;
   margin-bottom: 0.5rem;
 }
 
-.inputGroup {
+.cardHeader p {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.offerForm {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  margin-top: 1.5rem;
+  gap: 1.5rem;
+}
+
+.inputGroup {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.currency {
+  position: absolute;
+  left: 1.25rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--muted);
 }
 
 .inputGroup input {
+  width: 100%;
   background: var(--background);
   border: 1px solid var(--border);
-  padding: 1rem;
-  border-radius: var(--radius);
+  padding: 1rem 1rem 1rem 3rem;
+  border-radius: 1rem;
   color: var(--foreground);
-  font-size: 1.125rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  transition: all 0.2s ease;
 }
 
-.ownerNotice {
+.inputGroup input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+  outline: none;
+}
+
+.submitBtn {
+  background: var(--primary);
+  color: white;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  font-weight: 700;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.submitBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+}
+
+.trustBanner {
+  margin-top: 2rem;
   text-align: center;
+  font-size: 0.8rem;
+  color: var(--muted);
+  padding: 1rem;
+  border-top: 1px solid var(--border);
+  font-weight: 500;
 }
 
-.ownerActions {
+/* Owner/Seller Hub Styling */
+.ownerControls {
   display: flex;
-  gap: 1rem;
-  margin-top: 1.5rem;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.ownerBanner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  background: rgba(var(--primary-rgb), 0.05);
+  border: 1px solid rgba(var(--primary-rgb), 0.1);
+  border-radius: 1rem;
+  color: var(--primary);
+  font-weight: 600;
 }
 
 .deleteBtn {
   background: rgba(239, 68, 68, 0.1);
   color: #ef4444;
   border: 1px solid rgba(239, 68, 68, 0.2);
-  padding: 0.75rem 1.5rem;
-  border-radius: var(--radius);
-  font-weight: 600;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.75rem;
+  font-weight: 700;
+  font-size: 0.85rem;
   transition: all 0.2s ease;
 }
 
@@ -297,82 +274,234 @@
   color: white;
 }
 
-/* Seller Hub / Negotiations Tabs */
-.hubTabs {
-  display: flex;
-  gap: 1rem;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 2rem;
+.negotiationHub {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  padding: 2rem;
+  border-radius: 2rem;
+  box-shadow: var(--shadow-lg);
 }
 
-.tabBtn {
-  padding: 1rem 0;
-  background: none;
-  border: none;
-  color: var(--muted);
-  font-weight: 600;
-  position: relative;
-  transition: color 0.2s ease;
+.hubTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
 }
 
-.tabBtn.active {
-  color: var(--primary);
+.hubLayout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 2rem;
+  min-height: 500px;
 }
 
-.tabBtn.active::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--primary);
-}
-
-.negotiationsList {
+.offersSidebar {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  border-right: 1px solid var(--border);
+  padding-right: 1.5rem;
 }
 
-.negotiationCard {
+.offerCard {
+  width: 100%;
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  padding: 1rem;
+  border-radius: 1rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.offerCard:hover {
+  border-color: var(--primary);
+  transform: translateX(4px);
+}
+
+.offerCard.active {
+  background: var(--background);
+  border-color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.offerHead {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border);
-  border-radius: 1rem;
-  transition: border-color 0.2s ease;
-}
-
-.negotiationCard:hover {
-  border-color: var(--primary);
-}
-
-.buyerMeta {
-  display: flex;
-  flex-direction: column;
+  margin-bottom: 0.5rem;
 }
 
 .buyerName {
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
 }
 
-.offerPrice {
-  color: var(--accent);
-  font-weight: 600;
+.priceTag {
+  color: var(--primary);
+  font-weight: 800;
 }
 
 .offerStatus {
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.chatWindow {
+  display: flex;
+  flex-direction: column;
+}
+
+.activeChat {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.chatHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.chatTitle {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.statusBadge {
+  width: fit-content;
+  font-size: 0.65rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 2rem;
+  text-transform: uppercase;
+  font-weight: 800;
   letter-spacing: 0.05em;
 }
 
-@media (max-width: 768px) {
+.statusBadge.proposed { background: rgba(99, 102, 241, 0.1); color: var(--primary); }
+.statusBadge.accepted { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.statusBadge.declined { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+.sellerActions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.acceptBtn {
+  background: var(--primary);
+  color: white;
+  padding: 0.6rem 1rem;
+  border-radius: 0.75rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.declineBtn {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  padding: 0.6rem 1rem;
+  border-radius: 0.75rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.fullViewLink {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.fullViewLink:hover {
+  color: var(--accent);
+}
+
+.reportBtn {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  font-size: 0.85rem;
+  margin-top: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.reportBtn:hover {
+  opacity: 1;
+}
+
+.chatPlaceholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  gap: 1rem;
+}
+
+.chatPlaceholder .icon {
+  font-size: 3rem;
+  opacity: 0.3;
+}
+
+/* Animations and Utilities */
+.loader {
+  padding: 10rem;
+  text-align: center;
+  font-size: 1.25rem;
+  color: var(--primary);
+  font-weight: 600;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+@media (max-width: 1024px) {
   .contentLayout {
     grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+  .rightCol {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .price {
+    font-size: 2rem;
+  }
+  .detailsGroup h1 {
+    font-size: 2rem;
+  }
+  .hubLayout {
+    grid-template-columns: 1fr;
+  }
+  .offersSidebar {
+    border-right: none;
+    padding-right: 0;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+  .offerCard {
+    min-width: 200px;
   }
 }
