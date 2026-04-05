@@ -150,7 +150,11 @@ export default function SellPage() {
               <div className={styles.uploadArea}>
                 <CldUploadWidget 
                   onSuccess={handleUpload}
-                  uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "bazaar_preset"}
+                  uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
+                  options={{ 
+                    cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+                    maxFiles: 5 
+                  }}
                 >
                   {({ open }) => (
                     <button type="button" onClick={() => open()} className={styles.uploadBtn}>
