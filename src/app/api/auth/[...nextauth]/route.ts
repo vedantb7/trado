@@ -48,6 +48,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           image: user.avatar,
           karmaScore: user.karmaScore,
+          roles: user.roles,
         };
       },
     }),
@@ -57,6 +58,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.karmaScore = (user as any).karmaScore ?? 0;
+        token.roles = (user as any).roles ?? ["Buyer"];
       }
       return token;
     },
@@ -64,6 +66,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as any).id = token.id as string;
         (session.user as any).karmaScore = token.karmaScore ?? 0;
+        (session.user as any).roles = token.roles ?? ["Buyer"];
       }
       return session;
     },

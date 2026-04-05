@@ -41,6 +41,11 @@ export default function Navbar() {
           </button>
           {session ? (
             <>
+              {(session.user as any)?.roles?.includes("Admin") && (
+                <Link href="/admin/orders" className={styles.adminNavLink}>
+                  🛠️ Admin
+                </Link>
+              )}
               <Link href="/dashboard" className={styles.navLink}>Dashboard</Link>
               <Link href="/sell" className="btn-primary">Sell Item</Link>
               <div className={styles.userMenu}>
