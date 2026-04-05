@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { recalculateKarma } from "@/lib/karma";
 import { verifyHandshake } from "@/lib/handshake";
 import { getIO } from "@/lib/socket";
@@ -27,7 +27,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
       include: {
         listing: true,
         buyer: {
-          select: { id: true, name: true, avatar: true, karmaScore: true }
+          select: { id: true, name: true, image: true, karmaScore: true }
         },
         room: {
           include: {
@@ -145,7 +145,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         where: { id: offerId },
         include: {
           listing: true,
-          buyer: { select: { id: true, name: true, avatar: true, karmaScore: true } },
+          buyer: { select: { id: true, name: true, image: true, karmaScore: true } },
           room: true,
         },
       });
@@ -191,7 +191,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         where: { id: offerId },
         include: {
           listing: true,
-          buyer: { select: { id: true, name: true, avatar: true, karmaScore: true } },
+          buyer: { select: { id: true, name: true, image: true, karmaScore: true } },
           room: true,
         },
       });
@@ -214,7 +214,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       data: updateData,
       include: {
         listing: true,
-        buyer: { select: { id: true, name: true, avatar: true, karmaScore: true } },
+        buyer: { select: { id: true, name: true, image: true, karmaScore: true } },
         room: true,
       },
     });

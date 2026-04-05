@@ -1,16 +1,17 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import styles from "./page.module.css";
 
-export default function AuthError() {
+function AuthErrorContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
 
   let errorMessage = "An unexpected authentication error occurred.";
-  if (error === "OAuthSignin" || error === "OAuthCallback") {
-    errorMessage = "Check your Google OAuth credentials in the .env file. The current Client ID/Secret may be invalid or missing.";
+  if (error === "OAuthSignin" || error === "OAuthCallback" || error === "OAuthCreateAccount") {
+    errorMessage = "Google login failed. This usually happens if your credentials in .env are invalid or if your redirect URIs are not set correctly in Google Console.";
   } else if (error === "AccessDenied") {
     errorMessage = "Access restricted. You must use an @iitgn.ac.in email address to enter the marketplace.";
   } else if (error === "Configuration") {
@@ -30,5 +31,13 @@ export default function AuthError() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function AuthError() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AuthErrorContent />
+    </Suspense>
   );
 }

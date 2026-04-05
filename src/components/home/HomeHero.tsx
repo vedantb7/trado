@@ -22,7 +22,7 @@ export default function HomeHero() {
         <div className={styles.heroVisual}>
           <div className={styles.glassCard}>
             <div className={styles.cardHeader}>
-              <div className={styles.avatar} />
+              <div className={styles.image} />
               <div className={styles.userDetails}>
                 <div className={styles.userName}>Vivek Raj</div>
                 <div className={styles.userKarma}>⭐ 4.9 Karma</div>

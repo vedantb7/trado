@@ -6,7 +6,7 @@ import AuthProvider from "@/providers/AuthProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Bazaar@IITGN | The Community Exchange",
+  title: "Trado@IITGN | The Community Exchange",
   description: "A premium peer-to-peer trading platform for the IIT Gandhinagar community.",
 };
 

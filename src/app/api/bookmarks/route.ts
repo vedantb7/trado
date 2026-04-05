@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -18,7 +18,7 @@ export async function GET(request: Request) {
             seller: {
               select: {
                 name: true,
-                avatar: true,
+                image: true,
                 karmaScore: true,
               },
             },

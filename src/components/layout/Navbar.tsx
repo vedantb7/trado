@@ -31,7 +31,7 @@ export default function Navbar() {
     <nav className={styles.navbar}>
       <div className={styles.container}>
         <Link href="/" className={styles.logo}>
-          Bazaar<span>@IITGN</span>
+          Trado<span>@IITGN</span>
         </Link>
 
         <div className={styles.links}>

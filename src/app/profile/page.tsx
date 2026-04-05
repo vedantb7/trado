@@ -38,11 +38,11 @@ export default function ProfilePage() {
       <Navbar />
       <main className={styles.main}>
         <div className={styles.profileHeader}>
-          <div className={styles.avatarWrapper}>
+          <div className={styles.imageWrapper}>
             {user?.image ? (
-              <Image src={user.image} alt={user.name} width={120} height={120} className={styles.avatar} />
+              <Image src={user.image} alt={user.name} width={120} height={120} className={styles.image} />
             ) : (
-              <div className={styles.avatarPlaceholder}>{user?.name?.charAt(0) || "U"}</div>
+              <div className={styles.imagePlaceholder}>{user?.name?.charAt(0) || "U"}</div>
             )}
             <div className={styles.karmaBadge}>⭐ {user.karmaScore || 0} Karma</div>
           </div>

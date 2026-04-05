@@ -1,6 +1,6 @@
-# Trado: IITGN Campus Marketplace
+# 🛡️ Trado: IITGN Campus Marketplace
 
-Trado is a premium, real-time campus marketplace designed exclusively for the IIT Gandhinagar community. It enables students to buy, sell, and negotiate deals securely within the campus.
+Trado is a premium, real-time campus marketplace designed exclusively for the **IIT Gandhinagar** community. It features a high-trust "Campus Portal" aesthetic with strict Google OAuth security and real-time negotiation capabilities.
 
 ---
 
@@ -10,7 +10,7 @@ Follow these steps to get Trado up and running on your local machine.
 
 ### 1. Clone and Install
 ```bash
-git clone https://github.com/your-username/trado.git
+git clone https://github.com/vedantb7/trado.git
 cd trado
 npm install
 ```
@@ -31,11 +31,23 @@ sudo systemctl restart mongod
 mongosh --eval "rs.initiate()"
 ```
 
-### 3. Environment Setup
+### 3. Environment Setup (`.env`)
+Create a `.env` file in the root directory and paste the following, replacing placeholders with your real keys:
+
 ```bash
-cp .env.example .env
-# Edit .env with your DATABASE_URL and NEXTAUTH_SECRET
-# Recommended: DATABASE_URL="mongodb://127.0.0.1:27017/trado?replicaSet=rs0&directConnection=true"
+# MongoDB
+DATABASE_URL="mongodb://127.0.0.1:27017/trado?replicaSet=rs0&directConnection=true"
+
+# NextAuth (Google OAuth - Restricted to @iitgn.ac.in)
+GOOGLE_CLIENT_ID="your-client-id.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="GOCSPX-your-client-secret"
+NEXTAUTH_SECRET="your-32-char-random-secret"
+NEXTAUTH_URL="http://localhost:3001"
+
+# Cloudinary (Image Hosting)
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="your-cloud-name"
+NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET="your-preset"
+CLOUDINARY_URL="cloudinary://API_KEY:API_SECRET@CLOUD_NAME"
 ```
 
 ### 4. Initialize Database
@@ -52,43 +64,42 @@ Accessible at: [http://localhost:3001](http://localhost:3001)
 
 ---
 
-## ✨ Features
+## 🔐 Authentication & Security
+- **Strict OAuth**: Login is restricted exclusively to `@iitgn.ac.in` email addresses.
+- **Account Selection**: Users can switch between multiple Google accounts during the login flow.
+- **Identity Verification**: Profile pictures and names are automatically synced from Google to ensure campus-wide trust.
 
-### 🛒 Marketplace Essentials
-- **Campus Listings**: Post and browse items with categories, hostel locations, and high-quality images via Cloudinary.
-- **Dynamic Side Scroller**: Interactive "Freshly Added" section with smooth horizontal navigation arrows for quick discovery.
-- **Urgent Badges**: Real-time visual indicators for time-sensitive deals.
+---
 
-### 🤝 Trading & Negotiation
-- **Real-time Offers**: Propose and counter-offer prices instantly using Socket.io.
-- **Secure Chat**: Negotiate safely within the platform's integrated chat rooms.
-- **Handshake System**: Verified deal completion with unique handshake codes for trust.
+## 👑 Granting Admin Access
+To grant a user **Admin** privileges, use the following command in your terminal (`mongosh`):
 
-### 📊 Active Hub (User Profile)
-- **Central Dashboard**: Tracking center for your entire market activity.
-- **Buying Track**: Manage all your active bids and negotiation statuses.
-- **Selling Track**: Monitor your active listings and incoming offers.
-- **Watchlist (Bookmarks)**: Save listings for later with a single click.
+```javascript
+// Connect to the trado database
+use trado;
 
-### 🔔 Smart Notifications
-- **Price-Drop Alerts**: Automatically notified via UI badges in your Watchlist when a seller lowers the price of a saved item.
-- **Karma Score**: Dynamic reputation system based on successful trades and community reviews.
+// Update the user's role
+db.User.updateOne(
+  { email: "user.email@iitgn.ac.in" }, 
+  { $set: { roles: ["Admin"] } }
+);
+```
+
+---
+
+## ✨ Core Features
+- **Premium Glassmorphic UI**: High-contrast, transparent interface designed for a modern campus feel.
+- **Real-time Negotiation**: Propose, counter-offer, and accept deals instantly via Socket.io.
+- **Secure Handshake**: Each deal generates a unique code that both parties must verify to complete the trade.
+- **Karma Reputation**: Multi-factor scoring based on account age and successful trade history.
+- **Dynamic Watchlist**: Bookmarked items show real-time "Price Drop" badges when sellers lower their prices.
 
 ---
 
 ## 🛠️ Tech Stack
 - **Framework**: Next.js 14 (App Router)
-- **Real-time**: Socket.io + Express Custom Server
+- **Real-time**: Socket.io + Express Custom Server (`server.js`)
 - **Database**: MongoDB + Prisma ORM
-- **Auth**: NextAuth.js (Email restricted to `@iitgn.ac.in`)
-- **Styling**: Vanilla CSS with Modern Glassmorphism
-- **Images**: Cloudinary Integration
-
----
-
-## 📂 Project Structure
-- `server.js`: Combined Next.js & Socket.io server.
-- `src/app/`: Core application routes and logic.
-- `src/components/`: Reusable UI components (Listings, Chat, Layout).
-- `prisma/`: Database schema and migrations.
-- `public/`: Static assets and PWA configuration.
+- **Authentication**: NextAuth.js (Google Provider)
+- **Styling**: Vanilla CSS (Global Design System)
+- **Image Hosting**: Cloudinary

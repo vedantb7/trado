@@ -22,7 +22,7 @@ export default function LoginPage() {
       <div className={styles.card}>
         {/* Logo */}
         <Link href="/" className={styles.logo}>
-          Bazaar<span>@IITGN</span>
+          Trado<span>@IITGN</span>
         </Link>
         <p className={styles.tagline}>The Campus Marketplace</p>
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { generateHandshakeCode } from "@/lib/handshake";
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {

@@ -5,7 +5,7 @@ export default function Footer() {
     <footer className={styles.footer}>
       <div className={styles.container}>
         <div className={styles.info}>
-          <h3>Bazaar@IITGN</h3>
+          <h3>Trado@IITGN</h3>
           <p>The premium community exchange for IIT Gandhinagar students and staff.</p>
         </div>
         <div className={styles.links}>
@@ -20,11 +20,11 @@ export default function Footer() {
         <div className={styles.contact}>
           <h4>Support</h4>
           <p>Student Academic Council</p>
-          <p>Vivek Raj | Akshit Chhabra</p>
+          <p>Vedant | Dhruv</p>
         </div>
       </div>
       <div className={styles.bottom}>
-        &copy; {new Date().getFullYear()} Bazaar@IITGN. Built for HackRush'26.
+        &copy; {new Date().getFullYear()} Trado@IITGN. Built for HackRush'26.
       </div>
     </footer>
   );

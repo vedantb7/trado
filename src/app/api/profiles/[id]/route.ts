@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 export async function GET(
   request: Request,
@@ -80,7 +80,7 @@ export async function PUT(
   }
 
   try {
-    const { name, bio, avatar, contactPref, hostel, wing } = 
+    const { name, bio, image, contactPref, hostel, wing } = 
       await request.json();
 
     const user = await prisma.user.update({
@@ -88,7 +88,7 @@ export async function PUT(
       data: {
         ...(name && { name }),
         ...(bio && { bio }),
-        ...(avatar && { avatar }),
+        ...(image && { image }),
         ...(contactPref && { contactPref }),
         ...(hostel && { hostel }),
         ...(wing && { wing }),

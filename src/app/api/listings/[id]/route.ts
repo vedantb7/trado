@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { attachSellersToListings, withFallbackSeller } from "@/lib/listingsWithSellers";
 
@@ -17,7 +17,7 @@ export async function GET(
       include: {
         offers: {
           include: {
-            buyer: { select: { id: true, name: true, avatar: true, karmaScore: true } },
+            buyer: { select: { id: true, name: true, image: true, karmaScore: true } },
             room: true,
           },
           orderBy: { createdAt: "desc" },

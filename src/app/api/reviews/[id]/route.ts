@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
-import { updateKarma } from "@/lib/karma";
+import { authOptions } from "@/lib/auth";
+import { recalculateKarma } from "@/lib/karma";
 
 export async function GET(
   request: Request,
@@ -84,9 +84,7 @@ export async function POST(request: Request) {
     });
 
     // Update karma based on rating
-    if (rating >= 4) {
-      await updateKarma(revieweeId, "POSITIVE_REVIEW");
-    }
+    await recalculateKarma(revieweeId);
 
     return NextResponse.json(review);
   } catch (error) {
