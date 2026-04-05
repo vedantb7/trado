@@ -60,9 +60,19 @@ export async function POST(request: Request) {
       });
       return NextResponse.json({ bookmarked: false });
     } else {
+      // Fetch current listing price for price-drop tracking
+      const listing = await prisma.listing.findUnique({
+        where: { id: listingId },
+        select: { price: true }
+      });
+
       // Add bookmark
       const bookmark = await prisma.bookmark.create({
-        data: { userId, listingId },
+        data: { 
+          userId, 
+          listingId,
+          priceAtBookmark: listing?.price || 0
+        },
       });
       return NextResponse.json({ bookmarked: true, bookmark });
     }

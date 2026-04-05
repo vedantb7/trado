@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import ListingCard from "@/components/listings/ListingCard";
@@ -19,9 +19,9 @@ export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
   const userId = (session?.user as any)?.id;
   const { socket } = useSocket(userId, "listings") as any;
 
-  const fetchRecent = async () => {
+  const fetchRecent = useCallback(async () => {
     try {
-      const res = await fetch("/api/listings?limit=5");
+      const res = await fetch("/api/listings?limit=8"); // Fetch a few more for the scroller
       const data = await res.json();
       setRecentListings(data);
     } catch (err) {
@@ -29,26 +29,24 @@ export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchRecent();
-  }, []);
+  }, [fetchRecent]);
 
   // Live update: new listing posted by anyone
   useEffect(() => {
     if (!socket) return;
     const handleNewListing = (listing: any) => {
       setRecentListings((prev: any[]) => {
-        // Prepend new listing, cap at 5
         const updated = [listing, ...prev.filter((l: any) => l.id !== listing.id)];
-        return updated.slice(0, 5);
+        return updated.slice(0, 10);
       });
     };
     socket.on("listing_created", handleNewListing);
     return () => socket.off("listing_created", handleNewListing);
   }, [socket]);
-
 
   const CATEGORIES = [
     { name: "Electronics", icon: "💻" },
@@ -58,6 +56,16 @@ export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
     { name: "Sports", icon: "⚽" },
     { name: "Clothing", icon: "👕" },
   ];
+
+  const scroll = (direction: "left" | "right") => {
+    const container = document.getElementById("freshly-added-carousel");
+    if (!container) return;
+    const scrollAmount = 300;
+    container.scrollBy({
+      left: direction === "left" ? -scrollAmount : scrollAmount,
+      behavior: "smooth",
+    });
+  };
 
   return (
     <div className={styles.container}>
@@ -107,24 +115,32 @@ export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <h2>Freshly Added</h2>
-          <Link href="/listings" className={styles.viewAll}>View all listings →</Link>
+          <div className={styles.headerActions}>
+            <Link href="/listings" className={styles.viewAll}>View all listings →</Link>
+            <div className={styles.scrollControls}>
+                <button onClick={() => scroll("left")} className={styles.scrollBtn} aria-label="Scroll left">←</button>
+                <button onClick={() => scroll("right")} className={styles.scrollBtn} aria-label="Scroll right">→</button>
+            </div>
+          </div>
         </div>
         
         {loading ? (
-          <div>Loading awesome deals...</div>
+          <div className={styles.loader}>Looking for new arrivals...</div>
         ) : recentListings.length > 0 ? (
-          <div className={styles.carousel}>
-            {recentListings.map((listing: any) => (
-              <div key={listing.id} className={styles.carouselItem}>
-                <ListingCard listing={listing} />
-              </div>
-            ))}
+          <div className={styles.carouselWrapper}>
+            <div id="freshly-added-carousel" className={styles.carousel}>
+              {recentListings.map((listing: any) => (
+                <div key={listing.id} className={styles.carouselItem}>
+                  <ListingCard listing={listing} />
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
-          <div className="premium-card" style={{textAlign: 'center', padding: '3rem'}}>
-             <p style={{fontSize: '3rem', marginBottom: '1rem'}}>🏢</p>
+          <div className={styles.emptyState}>
+             <span className={styles.emptyIcon}>🏢</span>
              <h3>No recent listings found.</h3>
-             <p style={{color: 'var(--muted)'}}>Be the first to list something in your hostel!</p>
+             <p>Be the first to list something in your hostel!</p>
              <Link href="/sell" className="btn-primary" style={{marginTop: '1.5rem'}}>Sell Something</Link>
           </div>
         )}

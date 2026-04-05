@@ -213,6 +213,7 @@ model Bookmark {
   listingId String   @db.ObjectId
   listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
   
+  priceAtBookmark Float?
   createdAt DateTime @default(now())
   
   @@unique([userId, listingId])

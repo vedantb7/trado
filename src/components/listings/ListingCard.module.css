@@ -132,3 +132,43 @@
   border-color: var(--accent);
   color: var(--accent-foreground);
 }
+
+.bookmarkBtn {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+  font-size: 1.1rem;
+}
+
+.bookmarkBtn:hover {
+  transform: scale(1.1);
+  background: rgba(0, 0, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.bookmarkBtn:active {
+  transform: scale(0.95);
+}
+
+.bookmarked {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent);
+  color: #ef4444; /* Red-500 */
+}
+
+.bookmarked:hover {
+  background: rgba(255, 255, 255, 0.2);
+}

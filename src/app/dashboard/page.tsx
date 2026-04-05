@@ -11,7 +11,7 @@ import styles from "./page.module.css";
 export default function Dashboard() {
   const { data: session } = useSession();
   const [activeTab, setActiveTab] = useState("buying");
-  const [offers, setOffers] = useState<any[]>([]);
+  const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const userId = (session?.user as any)?.id;
@@ -21,10 +21,14 @@ export default function Dashboard() {
     if (!session?.user) return;
     setLoading(true);
     try {
-      const type = activeTab === "buying" ? "buying" : "selling";
-      const res = await fetch(`/api/offers?type=${type}`, { cache: "no-store" });
-      const data = await res.json();
-      setOffers(Array.isArray(data) ? data : []);
+      let endpoint = "";
+      if (activeTab === "buying") endpoint = "/api/offers?type=buying";
+      else if (activeTab === "selling") endpoint = "/api/offers?type=selling";
+      else if (activeTab === "watchlist") endpoint = "/api/bookmarks";
+
+      const res = await fetch(endpoint, { cache: "no-store" });
+      const result = await res.json();
+      setData(Array.isArray(result) ? result : []);
     } catch (err) {
       console.error("Dashboard error:", err);
     } finally {
@@ -40,8 +44,8 @@ export default function Dashboard() {
   useEffect(() => {
     if (!socket) return;
 
-    const handleNewOffer = (data: any) => {
-      if (data.sellerId === userId && activeTab === "selling") {
+    const handleNewOffer = (payload: any) => {
+      if (payload.sellerId === userId && activeTab === "selling") {
         fetchData();
       }
     };
@@ -49,7 +53,7 @@ export default function Dashboard() {
 
     socket.on("offer_received", handleNewOffer);
     socket.on("offer_status_changed", handleStatusChange);
-    socket.on("listing_created", handleStatusChange); // refresh selling tab when new listing is created
+    socket.on("listing_created", handleStatusChange);
 
     return () => {
       socket.off("offer_received", handleNewOffer);
@@ -66,8 +70,8 @@ export default function Dashboard() {
       <main className={styles.main}>
         <div className={styles.header}>
           <div className={styles.userSection}>
-            <h1>Control Center</h1>
-            <p className={styles.welcome}>Welcome back, {session?.user?.name || "Trader"}</p>
+            <h1>Active Hub</h1>
+            <p className={styles.welcome}>Tracking your market activity, {session?.user?.name || "Trader"}</p>
           </div>
           <div className={styles.karmaScore}>
             💎 { (session?.user as any)?.karmaScore || 0 } Karma
@@ -79,63 +83,97 @@ export default function Dashboard() {
             className={activeTab === "buying" ? styles.activeTab : ""}
             onClick={() => setActiveTab("buying")}
           >
-            My Bids
+            My Current Offers
           </button>
           <button 
             className={activeTab === "selling" ? styles.activeTab : ""}
             onClick={() => setActiveTab("selling")}
           >
-            My Listings
+            Items I’m Selling
+          </button>
+          <button 
+            className={activeTab === "watchlist" ? styles.activeTab : ""}
+            onClick={() => setActiveTab("watchlist")}
+          >
+            Watchlist
           </button>
         </div>
 
         <div className={styles.content}>
           <div className={styles.list}>
             {loading ? (
-              <div className={styles.loader}>Synchronizing your updates...</div>
-            ) : offers.length > 0 ? (
-              offers.map((offer: any) => (
-                <div key={offer.id} className={styles.offerCard}>
-                  <div className={styles.offerInfo}>
-                    <div className={styles.titleRow}>
-                      <h3>{offer.listing.title}</h3>
-                      <span className={`${styles.status} ${styles[offer.status.toLowerCase()]}`}>
-                        {offer.status}
-                      </span>
+              <div className={styles.loader}>Synchronizing Hub...</div>
+            ) : data.length > 0 ? (
+              data.map((item: any) => {
+                // Determine if it's an offer or a bookmark
+                const isBookmark = activeTab === "watchlist";
+                const listing = isBookmark ? item.listing : item.listing;
+                const priceAtBookmark = isBookmark ? item.priceAtBookmark : null;
+                const hasPriceDropped = isBookmark && priceAtBookmark && listing.price < priceAtBookmark;
+
+                return (
+                  <div key={item.id} className={styles.offerCard}>
+                    <div className={styles.offerInfo}>
+                      <div className={styles.titleRow}>
+                        <h3>{listing.title}</h3>
+                        {!isBookmark && (
+                          <span className={`${styles.status} ${styles[item.status.toLowerCase()]}`}>
+                            {item.status}
+                          </span>
+                        )}
+                        {hasPriceDropped && (
+                          <span className={styles.priceDropBadge}>
+                            📉 Price Drop! Was ₹{priceAtBookmark}
+                          </span>
+                        )}
+                      </div>
+                      <div className={styles.metaRow}>
+                        <span className={styles.price}>
+                          {isBookmark ? `Current Price: ₹${listing.price}` : `Active Bid: ₹${item.priceOffered}`}
+                        </span>
+                        <span className={styles.dot}>•</span>
+                        <span className={styles.category}>{listing.category}</span>
+                      </div>
                     </div>
-                    <div className={styles.metaRow}>
-                      <span className={styles.price}>Active Bid: ₹{offer.priceOffered}</span>
-                      <span className={styles.dot}>•</span>
-                      <span className={styles.category}>{offer.listing.category}</span>
-                    </div>
-                  </div>
-                  <div className={styles.offerActions}>
-                    <Link href={`/offers/${offer.id}`} className={styles.viewBtn}>
-                      Manage Trade
-                    </Link>
-                    {activeTab === "selling" && (
-                      <button 
-                        onClick={async (e) => {
-                          e.preventDefault();
-                          if (window.confirm("Archiving this listing will cancel all active negotiations. Continue?")) {
-                            const res = await fetch(`/api/listings/${offer.listingId}`, { method: "DELETE" });
-                            if (res.ok) fetchData();
-                          }
-                        }}
-                        className={styles.deleteBtnSmall}
-                        title="Delete Listing"
+                    <div className={styles.offerActions}>
+                      <Link 
+                        href={isBookmark ? `/listings/${listing.id}` : `/offers/${item.id}`} 
+                        className={styles.viewBtn}
                       >
-                        🗑️
-                      </button>
-                    )}
+                        {isBookmark ? "View Listing" : "Manage Trade"}
+                      </Link>
+                      {activeTab === "selling" && (
+                        <button 
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            if (window.confirm("Archiving this listing will cancel all active negotiations. Continue?")) {
+                              const res = await fetch(`/api/listings/${item.listingId}`, { method: "DELETE" });
+                              if (res.ok) fetchData();
+                            }
+                          }}
+                          className={styles.deleteBtnSmall}
+                          title="Delete Listing"
+                        >
+                          🗑️
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className={styles.cardPlaceholder}>
-                <div className={styles.icon}>🏙️</div>
-                <h3>Quiet Market...</h3>
-                <p>Start a new transition to see it appear here in your command center.</p>
+                <div className={styles.icon}>
+                  {activeTab === "buying" ? "🤝" : activeTab === "selling" ? "📦" : "🔖"}
+                </div>
+                <h3>
+                  {activeTab === "buying" ? "No Active Bids" : activeTab === "selling" ? "No Items for Sale" : "Watchlist Empty"}
+                </h3>
+                <p>
+                  {activeTab === "watchlist" 
+                    ? "Save items you're interested in to track price drops here." 
+                    : "Start exploring the marketplace to see activity here."}
+                </p>
                 <Link href="/listings" className="btn-primary" style={{ marginTop: '1.5rem' }}>
                     Browse Marketplace
                 </Link>

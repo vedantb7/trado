@@ -28,6 +28,7 @@
   letter-spacing: -0.03em;
   background: linear-gradient(to right, var(--foreground), var(--muted));
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -63,9 +64,52 @@
 }
 
 .activeTab {
-  background: var(--background) !important;
-  color: var(--primary) !important;
-  box-shadow: var(--shadow-sm);
+  background: var(--primary) !important;
+  color: white !important;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.priceDropBadge {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  padding: 0.25rem 0.75rem;
+  border-radius: 2rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.price {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.dot {
+  opacity: 0.3;
 }
 
 .list {

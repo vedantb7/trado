@@ -109,12 +109,18 @@
 }
 
 /* Horizontal Scroll for Listings */
+.carouselWrapper {
+  position: relative;
+  width: 100%;
+}
+
 .carousel {
   display: flex;
   gap: 1.5rem;
   overflow-x: auto;
   padding: 0.5rem 0.25rem 1.5rem;
   scrollbar-width: none; /* Firefox */
+  scroll-behavior: smooth;
 }
 
 .carousel::-webkit-scrollbar {
@@ -124,6 +130,80 @@
 .carouselItem {
   min-width: 280px;
   flex: 0 0 280px;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.scrollControls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.scrollBtn {
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.scrollBtn:hover {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.scrollBtn:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .scrollControls {
+    display: none;
+  }
+}
+
+.emptyState {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: var(--secondary);
+  border-top-right-radius: 2rem;
+  border-bottom-left-radius: 2rem; /* Asymmetric for premium look */
+  border: 1px dashed var(--border);
+}
+
+.emptyIcon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 1.5rem;
+}
+
+.loader {
+  padding: 3rem;
+  text-align: center;
+  color: var(--muted);
+  font-weight: 500;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
 }
 
 .quickActions {

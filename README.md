@@ -1,142 +1,94 @@
-# Trado (Bazaar@IITGN)
+# Trado: IITGN Campus Marketplace
 
-Campus marketplace for IIT Gandhinagar: listings, offers, real-time chat via Socket.io, and NextAuth (credentials, `@iitgn.ac.in` only). Built with Next.js 14 (App Router), Prisma, and MongoDB.
+Trado is a premium, real-time campus marketplace designed exclusively for the IIT Gandhinagar community. It enables students to buy, sell, and negotiate deals securely within the campus.
 
-## Features
+---
 
-- Browse and post listings (categories, hostel pickup, Cloudinary images)
-- Offers, chat rooms, handshake codes, and karma updates
-- PWA support (service worker generated on `next dev` / `next build`)
-- Custom Node server (`server.js`) so Socket.io shares the same HTTP port as Next.js
+## 🚀 Quick Setup (New Device)
 
-## Prerequisites
+Follow these steps to get Trado up and running on your local machine.
 
-- **Node.js** 20.x or newer  
-- **MongoDB** 6.x+ with a **replica set** (required for Prisma **transactions** when accepting or completing deals)
-
-## 1. Clone and install
-
+### 1. Clone and Install
 ```bash
-git clone https://github.com/<your-org>/trado.git
+git clone https://github.com/your-username/trado.git
 cd trado
-npm ci
+npm install
 ```
 
-Use `npm install` instead of `npm ci` if you do not commit `package-lock.json`.
+### 2. Configure MongoDB (Replica Set Required)
+Trado requires a MongoDB Replica Set for Prisma transactions.
 
-## 2. MongoDB (replica set)
-
-Prisma uses transactions for critical offer/listing updates. MongoDB must run as a replica set (even a single-node `rs0` is fine).
-
-### Local (Linux example)
-
-1. Enable replication in `/etc/mongod.conf`:
-
-   ```yaml
-   replication:
-     replSetName: "rs0"
-   ```
-
-2. Restart MongoDB and initiate the set:
-
-   ```bash
-   sudo systemctl restart mongod
-   mongosh --eval 'rs.initiate()'
-   ```
-
-3. Use a URI that includes the replica set name, for example:
-
-   `mongodb://localhost:27017/trado?replicaSet=rs0`
-
-### MongoDB Atlas
-
-Use the connection string from Atlas. Atlas clusters are replica sets by default; paste the SRV URL into `DATABASE_URL` in `.env`.
-
-### Docker (quick local node)
-
+**Using Docker (Easiest):**
 ```bash
-docker run -d --name mongo-rs -p 27017:27017 mongo:7 --replSet rs0
-docker exec -it mongo-rs mongosh --eval 'rs.initiate()'
+docker run -d --name trado-mongo -p 27017:27017 mongo:latest --replSet rs0
+docker exec -it trado-mongo mongosh --eval "rs.initiate()"
 ```
 
-Then set `DATABASE_URL="mongodb://127.0.0.1:27017/trado?replicaSet=rs0"`.
+**Local Mongod (Linux/Mac):**
+Ensure `replication.replSetName: "rs0"` is in your `mongod.conf`, then:
+```bash
+sudo systemctl restart mongod
+mongosh --eval "rs.initiate()"
+```
 
-## 3. Environment variables
-
+### 3. Environment Setup
 ```bash
 cp .env.example .env
+# Edit .env with your DATABASE_URL and NEXTAUTH_SECRET
+# Recommended: DATABASE_URL="mongodb://127.0.0.1:27017/trado?replicaSet=rs0&directConnection=true"
 ```
 
-Edit `.env`:
-
-| Variable | Purpose |
-|----------|---------|
-| `DATABASE_URL` | MongoDB connection string (must include `replicaSet=...` for local single-node setups) |
-| `NEXTAUTH_SECRET` | Random secret (e.g. `openssl rand -base64 32`) |
-| `NEXTAUTH_URL` | App origin; local dev default: `http://localhost:3001` |
-| `NEXT_PUBLIC_CLOUDINARY_*` | Optional for uploads; widget falls back to preset name in code if unset |
-
-Authentication is **email + password** for `@iitgn.ac.in` addresses (register tab on `/login`), not Google OAuth.
-
-## 4. Database schema
-
+### 4. Initialize Database
 ```bash
 npx prisma generate
 npx prisma db push
 ```
 
-Optional: `npx prisma studio` to inspect data.
-
-## 5. Run the app (development)
-
-The app expects the **custom server** so API routes and Socket.io share one process:
-
+### 5. Launch
 ```bash
 npm run dev
 ```
+Accessible at: [http://localhost:3001](http://localhost:3001)
 
-Open [http://localhost:3001](http://localhost:3001). On `/login`, use the **Register** tab with an `@iitgn.ac.in` email, then sign in.
+---
 
-> **Note:** `npm start` runs `next start` only and does **not** start Socket.io. For production-like runs with realtime features, build then run the custom server (see below).
+## ✨ Features
 
-## 6. Production build (local)
+### 🛒 Marketplace Essentials
+- **Campus Listings**: Post and browse items with categories, hostel locations, and high-quality images via Cloudinary.
+- **Dynamic Side Scroller**: Interactive "Freshly Added" section with smooth horizontal navigation arrows for quick discovery.
+- **Urgent Badges**: Real-time visual indicators for time-sensitive deals.
 
-```bash
-npm run build
-NODE_ENV=production node server.js
-```
+### 🤝 Trading & Negotiation
+- **Real-time Offers**: Propose and counter-offer prices instantly using Socket.io.
+- **Secure Chat**: Negotiate safely within the platform's integrated chat rooms.
+- **Handshake System**: Verified deal completion with unique handshake codes for trust.
 
-Ensure `NEXTAUTH_URL` points at your public URL when deployed.
+### 📊 Active Hub (User Profile)
+- **Central Dashboard**: Tracking center for your entire market activity.
+- **Buying Track**: Manage all your active bids and negotiation statuses.
+- **Selling Track**: Monitor your active listings and incoming offers.
+- **Watchlist (Bookmarks)**: Save listings for later with a single click.
 
-## Project layout
+### 🔔 Smart Notifications
+- **Price-Drop Alerts**: Automatically notified via UI badges in your Watchlist when a seller lowers the price of a saved item.
+- **Karma Score**: Dynamic reputation system based on successful trades and community reviews.
 
-| Path | Role |
-|------|------|
-| `server.js` | HTTP server + Socket.io; mounts Next.js |
-| `src/app/` | App Router pages and API routes |
-| `prisma/schema.prisma` | Data model (MongoDB) |
-| `src/lib/listingsWithSellers.ts` | Listing queries resilient to missing seller users |
+---
 
-## PWA files
+## 🛠️ Tech Stack
+- **Framework**: Next.js 14 (App Router)
+- **Real-time**: Socket.io + Express Custom Server
+- **Database**: MongoDB + Prisma ORM
+- **Auth**: NextAuth.js (Email restricted to `@iitgn.ac.in`)
+- **Styling**: Vanilla CSS with Modern Glassmorphism
+- **Images**: Cloudinary Integration
 
-Files such as `public/sw.js` and `public/workbox-*.js` are **generated** by `next-pwa`. They are listed in `.gitignore`. After clone, run `npm run dev` or `npm run build` once to create them.
+---
 
-## Pushing to GitHub
-
-```bash
-git add -A
-git status   # confirm no .env or .next/
-git commit -m "Describe your change"
-git remote add origin https://github.com/<you>/<repo>.git   # if not set
-git push -u origin main
-```
-
-Never commit `.env`, `.next/`, `node_modules/`, or generated PWA assets.
-
-## Docs
-
-- `docs/problem-statement.pdf` — original problem statement (if bundled with the repo)
-
-## Credits
-
-Built for the IITGN community / SAC context (e.g. HackRush’26); stakeholders and authors as listed in your course or org materials.
+## 📂 Project Structure
+- `server.js`: Combined Next.js & Socket.io server.
+- `src/app/`: Core application routes and logic.
+- `src/components/`: Reusable UI components (Listings, Chat, Layout).
+- `prisma/`: Database schema and migrations.
+- `public/`: Static assets and PWA configuration.
