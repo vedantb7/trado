@@ -9,7 +9,7 @@ import { useSocket } from "@/hooks/useSocket";
 import styles from "./page.module.css";
 
 const CATEGORIES = ["Electronics", "Books", "Cycles", "HostelGear"];
-const HOSTELS = ["Aiyana", "Beauki", "Chimair", "Duari", "Ekaant", "Falgun", "Gagan", "Hridaya", "Indu", "Jasubai"];
+const HOSTELS = ["Aibaan", "Beauki", "Chimair", "Duven", "Emiet", "Firpeal", "Griwiksh", "Hiqom", "Ijokha", "Jurqia", "Kyzeel"];
 
 export default function ListingsPage() {
   const { data: session } = useSession();

@@ -1,6 +1,12 @@
+import Link from "next/link";
 import styles from "./HomeHero.module.css";
 
 export default function HomeHero() {
+  const scrollToFeatures = () => {
+    const features = document.getElementById("features");
+    features?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <main className={styles.main}>
       <section className={styles.hero}>
@@ -15,8 +21,12 @@ export default function HomeHero() {
             books, and hostel gear with verified peers.
           </p>
           <div className={styles.cta}>
-            <button className="btn-primary">Browse Listings</button>
-            <button className={styles.secondaryBtn}>How it works</button>
+            <Link href="/listings" className="btn-primary">
+              Browse Listings
+            </Link>
+            <button onClick={scrollToFeatures} className={styles.secondaryBtn}>
+              How it works
+            </button>
           </div>
         </div>
         <div className={styles.heroVisual}>
@@ -37,14 +47,14 @@ export default function HomeHero() {
         </div>
       </section>
 
-      <section className={styles.features}>
+      <section id="features" className={styles.features}>
         <div className={styles.feature}>
           <h3>Verified @iitgn</h3>
           <p>Exclusive access for the IITGN community — sign in with your institute email.</p>
         </div>
         <div className={styles.feature}>
           <h3>Handshake Deals</h3>
-          <p>Smart pickup points like Aiyana Mess for secure real-world trades.</p>
+          <p>Smart pickup points like Aibaan Mess for secure real-world trades.</p>
         </div>
         <div className={styles.feature}>
           <h3>Trust System</h3>

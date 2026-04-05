@@ -11,16 +11,17 @@ import styles from "./page.module.css";
 
 const CATEGORIES = ["Electronics", "Books", "Cycles", "HostelGear"];
 const HOSTELS = [
-  "Aiyana",
+  "Aibaan",
   "Beauki",
   "Chimair",
-  "Duari",
-  "Ekaant",
-  "Falgun",
-  "Gagan",
-  "Hridaya",
-  "Indu",
-  "Jasubai",
+  "Duven",
+  "Emiet",
+  "Firpeal",
+  "Griwiksh",
+  "Hiqom",
+  "Ijokha",
+  "Jurqia",
+  "Kyzeel",
 ];
 
 
@@ -36,7 +37,7 @@ export default function SellPage() {
     description: "",
     price: "",
     category: "Electronics",
-    locationHostel: "Aiyana",
+    locationHostel: "Aibaan",
     isUrgent: false,
     images: [] as string[],
   });

@@ -8,16 +8,17 @@ generator client {
 }
 
 enum Hostel {
-  Aiyana
+  Aibaan
   Beauki
   Chimair
-  Duari
-  Ekaant
-  Falgun
-  Gagan
-  Hridaya
-  Indu
-  Jasubai
+  Duven
+  Emiet
+  Firpeal
+  Griwiksh
+  Hiqom
+  Ijokha
+  Jurqia
+  Kyzeel
 }
 
 enum Category {

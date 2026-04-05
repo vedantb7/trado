@@ -13,6 +13,8 @@
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --grad-primary: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  --accent-foreground: #ffffff;
 }
 
 [data-theme='dark'], :root.dark {
@@ -27,6 +29,8 @@
   --glass: rgba(15, 23, 42, 0.6);
   --glass-border: rgba(255, 255, 255, 0.08);
   --shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
+  --grad-primary: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+  --accent-foreground: #ffffff;
 }
 
 * {
