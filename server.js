@@ -17,9 +17,8 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 const dev = process.env.NODE_ENV !== "production";
-const hostname = "localhost";
-const port = 3001; // Match the user's current environment
-const app = next({ dev, hostname, port });
+const port = parseInt(process.env.PORT, 10) || 3001; 
+const app = next({ dev });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
@@ -118,6 +117,6 @@ app.prepare().then(() => {
       process.exit(1);
     })
     .listen(port, () => {
-      console.log(`> Ready on http://${hostname}:${port}`);
+      console.log(`> Ready on port ${port}`);
     });
 });
