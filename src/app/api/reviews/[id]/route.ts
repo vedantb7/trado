@@ -16,7 +16,8 @@ export async function GET(
           select: {
             id: true,
             name: true,
-            avatar: true,
+            image: true,
+            karmaScore: true,
           },
         },
       },

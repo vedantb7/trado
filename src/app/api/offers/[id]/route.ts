@@ -36,7 +36,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
                 timestamp: "asc"
               },
               include: {
-                sender: { select: { id: true, name: true, avatar: true } }
+                sender: { select: { id: true, name: true, image: true } }
               }
             }
           }

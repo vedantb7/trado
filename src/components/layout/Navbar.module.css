@@ -44,15 +44,32 @@
   gap: 2rem;
 }
 
-.links a {
-  font-size: 0.925rem;
+.links a, .navLink {
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--muted);
-  transition: color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
-.links a:hover {
+.links a:hover, .navLink:hover {
   color: var(--foreground);
+}
+
+.adminNavLink {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--primary) !important;
+  background: rgba(99, 102, 241, 0.1);
+  padding: 0.4rem 0.8rem;
+  border-radius: 2rem;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  transition: all 0.2s ease;
+}
+
+.adminNavLink:hover {
+  background: var(--primary);
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 .themeToggle {

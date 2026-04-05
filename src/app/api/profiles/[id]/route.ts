@@ -14,7 +14,7 @@ export async function GET(
         id: true,
         name: true,
         email: true,
-        avatar: true,
+        image: true,
         bio: true,
         karmaScore: true,
         hostel: true,
@@ -28,7 +28,7 @@ export async function GET(
           select: {
             rating: true,
             comment: true,
-            reviewer: { select: { name: true, avatar: true } },
+            reviewer: { select: { name: true, image: true } },
           },
           take: 10,
         },

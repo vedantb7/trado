@@ -3,14 +3,14 @@ import prisma from "@/lib/prisma";
 export const listingSellerSelect = {
   id: true,
   name: true,
-  avatar: true,
+  image: true,
   karmaScore: true,
 } as const;
 
 export type ListingSellerPublic = {
   id: string;
   name: string | null;
-  avatar: string | null;
+  image: string | null;
   karmaScore: number;
 };
 
@@ -24,7 +24,7 @@ export function withFallbackSeller<
       listing.seller ?? {
         id: listing.sellerId,
         name: "Unavailable",
-        avatar: null,
+        image: null,
         karmaScore: 0,
       },
   };

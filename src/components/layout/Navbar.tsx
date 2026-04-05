@@ -46,6 +46,7 @@ export default function Navbar() {
                   🛠️ Admin
                 </Link>
               )}
+              <Link href="/profile" className={styles.navLink}>Profile</Link>
               <Link href="/dashboard" className={styles.navLink}>Dashboard</Link>
               <Link href="/sell" className="btn-primary">Sell Item</Link>
               <div className={styles.userMenu}>

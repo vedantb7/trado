@@ -39,8 +39,10 @@ export async function GET(request: Request) {
           }
         },
         include: {
-          buyer: { select: { name: true, avatar: true, karmaScore: true } },
-          listing: true
+          buyer: { select: { name: true, image: true, karmaScore: true } },
+          listing: {
+            select: { title: true, price: true, images: true, status: true },
+          },
         },
         orderBy: { updatedAt: "desc" }
       });
