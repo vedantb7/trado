@@ -1,5 +1,9 @@
 # 🛡️ Trado: IITGN Campus Marketplace
 
+Trado is a premium, real-time campus marketplace.
+
+🚀 **Live App**: [trado-j935.onrender.com](https://trado-j935.onrender.com/)
+
 Trado is a premium, real-time campus marketplace designed exclusively for the **IIT Gandhinagar** community. It features a high-trust "Campus Portal" aesthetic with strict Google OAuth security and real-time negotiation capabilities.
 
 ---
