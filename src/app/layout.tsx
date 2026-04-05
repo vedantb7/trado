@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXTAUTH_URL || "http://localhost:3001"),
   title: "Trado@IITGN | The Community Exchange",
   description: "A premium peer-to-peer trading platform for the IIT Gandhinagar community.",
+  icons: { icon: "/logo.png" },
 };
 
 export default function RootLayout({

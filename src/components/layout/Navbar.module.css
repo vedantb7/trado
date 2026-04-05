@@ -28,6 +28,18 @@
   font-weight: 900;
   letter-spacing: -0.04em;
   color: var(--foreground);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logoImage {
+  height: 2.2rem;
+  aspect-ratio: 1/1;
+  object-fit: contain;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: white; /* Contrast for the icon on both themes */
 }
 
 .logo span {

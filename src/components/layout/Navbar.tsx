@@ -36,6 +36,7 @@ export default function Navbar() {
     <nav className={styles.navbar}>
       <div className={styles.container}>
         <Link href="/" className={styles.logo}>
+          <img src="/logo.png" alt="Trado Logo" className={styles.logoImage} />
           Trado<span>@IITGN</span>
         </Link>
 
